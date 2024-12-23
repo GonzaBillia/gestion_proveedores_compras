@@ -1,5 +1,5 @@
 import pymysql
-from config.config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+from config.config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE
 
 def create_connection():
     """
@@ -14,7 +14,7 @@ def create_connection():
             port=port,
             user=DB_USER,
             password=DB_PASSWORD,
-            db=DB_NAME,
+            db=DB_DATABASE,
             use_unicode=True,
             charset='utf8',
         )
