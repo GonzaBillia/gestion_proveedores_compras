@@ -19,6 +19,8 @@ def compare_by_barcode(provider_df, db_df):
     provider_df['ean'] = provider_df['ean'].astype(str)
     db_df['ean'] = db_df['ean'].astype(str)
 
+    
+
     # Encontrar coincidencias utilizando un merge por la columna 'ean'
     matches = pd.merge(provider_df, db_df, on='ean', how='inner', suffixes=('_provider', '_db'))
 
