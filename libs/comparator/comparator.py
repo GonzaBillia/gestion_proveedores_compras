@@ -1,3 +1,8 @@
-from controllers.process_controller import make_comparation
+from libs.comparator.controllers.process_controller import make_comparation, make_provider_comparation
 
-make_comparation()
+id_provider = 28
+
+def comparate():
+    provider_match, provider_unmatch, matches = make_comparation()
+
+    make_provider_comparation(matches, id_provider)

@@ -1,5 +1,6 @@
 from libs.comparator.controllers.db_controller import fetch_products_by_barcode, fetch_products_matched
 from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode
+from libs.comparator.services.compare_algorythms.compare_provider import compare_by_provider
 from libs.comparator.controllers.file_controller import read_file, open_file, normalize_columns, export_file_to_excel
 
 def make_comparation():
@@ -31,9 +32,23 @@ def make_comparation():
     # Obtencion de IDs para segunda consulta
     array_productos = result["matches"]["idproducto"].tolist()
 
+    # Renombrar objetos
+    provider_match = result["matches"]
+    provider_unmatch = result["unmatched"]
+
     # Consulta de productos coincidentes con lista de proveedor
     matches = fetch_products_matched(array_productos)
 
     # Guardado de archivos
     export_file_to_excel(result["matches"], result["unmatched"], 'resultados-cabrales.xlsx')
     export_file_to_excel(matches, None, 'matches_quantio-cabrales.xlsx')
+
+    return provider_match, provider_unmatch, matches
+
+def make_provider_comparation(provider_match, id_provider):
+    # Funcion de comparacion por proveedor
+
+    result = compare_by_provider(provider_match, id_provider)
+
+    print("\nProductos que solo están en tu base de datos:")
+    print(result['solo_base_datos'])

@@ -3,34 +3,67 @@ PRODUCTS_MATCHED = """
         p.IDProducto,
         p.Codebar AS ean,
         CONCAT(p.Producto, ' ', p.Presentacion) AS descripcion,
-        l.Nombre AS Proveedor,
+        pr.Nombre AS Proveedor,
+        pr.IDProveedor AS IDProveedor,
+        l.Nombre AS Laboratorio,
         p.IDLaboratorio,
         p.Activo
     FROM 
         productos AS p
     INNER JOIN 
         laboratorios AS l
-    ON 
-        p.IDLaboratorio = l.IDLaboratorio
+        ON p.IDLaboratorio = l.IDLaboratorio
+    INNER JOIN 
+        proveedores AS pr
+        ON p.IDProveedor = pr.IDProveedor
     WHERE 
         p.IDProducto IN %(id_producto_array)s;
 """
 
+PRODUCTS_BY_PROVIDER = """
+    SELECT 
+        p.IDProducto,
+        p.Codebar AS ean,
+        CONCAT(p.Producto, ' ', p.Presentacion) AS descripcion,
+        pr.Nombre AS Proveedor,
+        pr.IDProveedor AS IDProveedor,
+        l.Nombre AS Laboratorio,
+        p.IDLaboratorio,
+        p.Activo
+    FROM 
+        productos AS p
+    INNER JOIN 
+        laboratorios AS l
+        ON p.IDLaboratorio = l.IDLaboratorio
+    INNER JOIN 
+        proveedores AS pr
+        ON p.IDProveedor = pr.IDProveedor
+    WHERE 
+        pr.IDProveedor = %(id_provider)s;
+"""
+
 ALL_CODEBARS = """
     SELECT 
-        productos.IDProducto AS IDProducto, 
-        productos.Codebar AS Codebar,
+        p.IDProducto AS IDProducto, 
+        p.Codebar AS Codebar,
         'S' AS EsCodigoPrincipal
     FROM 
-        productos;
+        productos AS p
 
     UNION ALL
 
     SELECT 
-        productoscodebars.IDProducto AS IDProducto, 
-        productoscodebars.codebar AS Codebar,
+        pc.IDProducto AS IDProducto, 
+        pc.Codebar AS Codebar,
         'N' AS EsCodigoPrincipal
     FROM 
-        productoscodebars;
+        productoscodebars AS pc;
+"""
 
+ALL_PROVIDERS = """
+    SELECT
+        IDProveedor,
+        Nombre
+    FROM
+        proveedores;
 """
