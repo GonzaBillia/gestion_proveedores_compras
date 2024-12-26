@@ -27,7 +27,10 @@ def compare_by_barcode(provider_df, db_df):
     # Encontrar productos sin coincidencias en el DataFrame del proveedor
     unmatched = provider_df.loc[~provider_df['ean'].isin(matches['ean'])]
 
-    return {
-        "matches": matches,  # Productos con coincidencias
-        "unmatched": unmatched  # Productos sin coincidencias
-    }
+    # Crear la lista de tuplas
+    dataframes_with_names = [
+        (matches, 'Matches'),  # Productos con coincidencias
+        (unmatched, 'Unmatched')  # Productos sin coincidencias
+    ]
+
+    return dataframes_with_names

@@ -3,6 +3,6 @@ from libs.comparator.controllers.process_controller import make_comparation, mak
 id_provider = 28
 
 def comparate():
-    provider_match, provider_unmatch, matches = make_comparation()
+    matches = make_comparation()
 
     make_provider_comparation(matches, id_provider)

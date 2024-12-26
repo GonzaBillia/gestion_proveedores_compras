@@ -28,6 +28,7 @@ def fetch_products_matched(array_productos):
 
         columns = ['IDProducto', 'ean', 'descripcion', 'Proveedor', 'IDProveedor', 'Laboratorio', 'IDLaboratorio', 'Activo']
         db_df = pd.DataFrame(result, columns=columns)
+        
 
         # Convertir resultados a DataFrame
         logging.info("Transformando resultados a DataFrame.")

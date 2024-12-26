@@ -22,28 +22,31 @@ def make_comparation():
     # Funcion de comparacion por Codigo de Barras
     result = compare_by_barcode(provider_df, db_df)
 
+    matches = result[0][0]
+    unmatched = result[1][0]
+
     # Impresion de resultados por consola
     print("Coincidencias (matches):")
-    print(result["matches"])
+    print(matches)
 
     print("\nProductos sin coincidencias (unmatched):")
-    print(result["unmatched"])
+    print(unmatched)
 
     # Obtencion de IDs para segunda consulta
-    array_productos = result["matches"]["idproducto"].tolist()
-
-    # Renombrar objetos
-    provider_match = result["matches"]
-    provider_unmatch = result["unmatched"]
+    array_productos = matches["idproducto"].tolist()
 
     # Consulta de productos coincidentes con lista de proveedor
-    matches = fetch_products_matched(array_productos)
+    matches_p = fetch_products_matched(array_productos)
+
+    matches_p_with_names = [
+        (matches_p, 'Productos matched')
+    ]
 
     # Guardado de archivos
-    export_file_to_excel(result["matches"], result["unmatched"], 'resultados-cabrales.xlsx')
-    export_file_to_excel(matches, None, 'matches_quantio-cabrales.xlsx')
+    export_file_to_excel(result, 'resultados_avent.xlsx')
+    export_file_to_excel(matches_p_with_names, 'matches_quantio_avent.xlsx')
 
-    return provider_match, provider_unmatch, matches
+    return matches_p
 
 def make_provider_comparation(provider_match, id_provider):
     # Funcion de comparacion por proveedor
@@ -51,4 +54,6 @@ def make_provider_comparation(provider_match, id_provider):
     result = compare_by_provider(provider_match, id_provider)
 
     print("\nProductos que solo están en tu base de datos:")
-    print(result['solo_base_datos'])
+    print(result[1][0])
+
+    export_file_to_excel(result, 'resultado_por_proveedor_avent.xlsx')

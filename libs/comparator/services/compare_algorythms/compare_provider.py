@@ -6,8 +6,6 @@ def compare_by_provider(provider_df, id_provider):
 
     products_df = fetch_products_by_provider(id_provider)
 
-    print(products_df)
-
     # Asegurarnos de que las columnas 'IDProveedor' existan en ambos DataFrames
     if 'IDProveedor' not in provider_df.columns or 'IDProveedor' not in products_df.columns:
         print(provider_df.columns)
@@ -24,10 +22,14 @@ def compare_by_provider(provider_df, id_provider):
     print(merge_result["_merge"].value_counts())
 
     solo_base_datos = merge_result[merge_result["_merge"] == "left_only"]
+    coincidencias = merge_result[merge_result["_merge"] == "both"]
 
-    return {
-        'solo_base_datos': solo_base_datos
-    }
+    df_with_names = [
+        (coincidencias, 'coincidencias'),
+        (solo_base_datos, 'solo en base de datos')
+    ]
+
+    return df_with_names
 
 
 

@@ -111,28 +111,30 @@ def export_file(dataframe, filename, file_format='excel', sheet_name='Sheet1'):
 
     print(f"Archivo exportado: {full_filename}")
 
-def export_file_to_excel(matches, unmatched, filename):
+import pandas as pd
+
+def export_file_to_excel(dataframes_with_names, filename):
     path = 'C:\\Users\\Administrador\\Documents\\Gonzalo\\archivos\\lista proveedores\\comparados\\'
     """
-    Exporta los DataFrames de `matches` y `unmatched` a un archivo Excel con hojas separadas.
+    Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
 
     Args:
-        matches (pd.DataFrame): DataFrame con los matches.
-        unmatched (pd.DataFrame): DataFrame con los unmatched.
-        filename (str): Nombre del archivo Excel a exportar. Default: 'results.xlsx'.
+        dataframes_with_names (list of tuples): Lista de tuplas donde cada una contiene un DataFrame y el nombre de la hoja.
+            Ejemplo: [(df1, 'Sheet1'), (df2, 'Sheet2')]
+        filename (str): Nombre del archivo Excel a exportar. Ejemplo: 'results.xlsx'.
     """
+
+    if not dataframes_with_names:
+        print("No se proporcionaron DataFrames para exportar.")
+        return
 
     # Exportar a Excel
     with pd.ExcelWriter((path + filename), engine='openpyxl') as writer:
-        # Verificar y exportar los matches si existen
-        if matches is not None and not matches.empty:
-            matches.to_excel(writer, index=False, sheet_name='Matches')
-        else:
-            print("El DataFrame 'matches' está vacío o no existe.")
-        
-        # Verificar y exportar los unmatched si existen
-        if unmatched is not None and not unmatched.empty:
-            unmatched.to_excel(writer, index=False, sheet_name='Unmatched')
-        else:
-            print("El DataFrame 'unmatched' está vacío o no existe.")
-        print(f"Archivo exportado: {filename}")
+        for dataframe, sheet_name in dataframes_with_names:
+            # Verificar que el DataFrame no esté vacío y sea válido
+            if dataframe is not None and not dataframe.empty:
+                dataframe.to_excel(writer, index=False, sheet_name=sheet_name[:31])  # Limitar el nombre a 31 caracteres
+            else:
+                print(f"El DataFrame asociado a la hoja '{sheet_name}' está vacío o no existe.")
+
+    print(f"Archivo exportado exitosamente: {filename}")
