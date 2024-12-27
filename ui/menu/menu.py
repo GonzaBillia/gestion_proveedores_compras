@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox
+from libs.comparator import comparator
 
 def nuevo_proceso():
     # Función para manejar la acción "Nuevo Proceso"
-    QMessageBox.information(None, "Nuevo Proceso", "Aquí se iniciará un nuevo proceso.")
+    comparator.comparate()
 
 def salir():
     # Función para manejar la acción "Salir"

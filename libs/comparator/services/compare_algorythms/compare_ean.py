@@ -34,3 +34,12 @@ def compare_by_barcode(provider_df, db_df):
     ]
 
     return dataframes_with_names
+
+def find_unmatches_barcodes(provider_df, db_df):
+
+    db_df.columns = db_df.columns.str.lower()
+    
+    # Hacer el merge preservando todas las columnas de ambos DataFrames
+    df_merge = pd.merge(provider_df, db_df, on='idproducto', how='outer', suffixes=('_1', '_2'))
+
+    return df_merge
