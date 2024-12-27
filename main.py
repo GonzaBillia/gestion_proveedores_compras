@@ -1,34 +1,17 @@
-from libs.comparator import comparator
 import tkinter as tk
-from tkinter import Menu
+from ui.main_window import MainWindow
 
-root = tk.Tk()
+def main():
+    # Crear la raíz de la aplicación
+    root = tk.Tk()
+    root.title("Gestion de Compras")
+    root.geometry("800x600")  # Ancho x Alto
 
-# comparator.comparate()
+    # Crear la ventana principal
+    app = MainWindow(root)
 
-menubar = Menu(root)
-root.config(menu=menubar)  
+    # Ejecutar la aplicación
+    root.mainloop()
 
-filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Nuevo")
-filemenu.add_command(label="Abrir")
-filemenu.add_command(label="Guardar")
-filemenu.add_command(label="Cerrar")
-filemenu.add_separator()
-filemenu.add_command(label="Salir", command=root.quit)
-
-editmenu = Menu(menubar, tearoff=0)
-editmenu.add_command(label="Cortar")
-editmenu.add_command(label="Copiar")
-editmenu.add_command(label="Pegar")
-
-helpmenu = Menu(menubar, tearoff=0)
-helpmenu.add_command(label="Ayuda")
-helpmenu.add_separator()
-helpmenu.add_command(label="Acerca de...")
-
-menubar.add_cascade(label="Archivo", menu=filemenu)
-menubar.add_cascade(label="Editar", menu=editmenu)
-menubar.add_cascade(label="Ayuda", menu=helpmenu)
-
-root.mainloop()
+if __name__ == "__main__":
+    main()
