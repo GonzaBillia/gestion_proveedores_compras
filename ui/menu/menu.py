@@ -1,24 +1,40 @@
-import tkinter as tk
-from tkinter import messagebox
+from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox
 
 def nuevo_proceso():
-    messagebox.showinfo("Nuevo Proceso", "Aquí se iniciará un nuevo proceso.")
+    # Función para manejar la acción "Nuevo Proceso"
+    QMessageBox.information(None, "Nuevo Proceso", "Aquí se iniciará un nuevo proceso.")
 
 def salir():
-    exit()
+    # Función para manejar la acción "Salir"
+    respuesta = QMessageBox.question(
+        None,
+        "Salir",
+        "¿Estás seguro de que deseas salir?",
+        QMessageBox.Yes | QMessageBox.No
+    )
+    if respuesta == QMessageBox.Yes:
+        exit()
 
-def configure_menu(root):
-    # Crear el menú superior
-    menu_bar = tk.Menu(root)
+def configure_menu(window: QMainWindow):
+    """
+    Configura el menú de la ventana principal.
+    :param window: Instancia de QMainWindow
+    """
+    # Crear la barra de menú
+    menu_bar = window.menuBar()
 
-    # Crear la categoría "Procesos"
-    menu_procesos = tk.Menu(menu_bar, tearoff=0)
-    menu_procesos.add_command(label="Nuevo Proceso", command=nuevo_proceso)
-    menu_procesos.add_separator()
-    menu_procesos.add_command(label="Salir", command=salir)
+    # Crear el menú "Procesos"
+    menu_procesos = menu_bar.addMenu("Procesos")
 
-    # Agregar la categoría "Procesos" al menú principal
-    menu_bar.add_cascade(label="Procesos", menu=menu_procesos)
+    # Opción "Nuevo Proceso"
+    nuevo_proceso_action = QAction("Nuevo Proceso", window)
+    nuevo_proceso_action.triggered.connect(nuevo_proceso)
+    menu_procesos.addAction(nuevo_proceso_action)
 
-    # Configurar el menú en la ventana principal
-    root.config(menu=menu_bar)
+    # Separador
+    menu_procesos.addSeparator()
+
+    # Opción "Salir"
+    salir_action = QAction("Salir", window)
+    salir_action.triggered.connect(salir)
+    menu_procesos.addAction(salir_action)
