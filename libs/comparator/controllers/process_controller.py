@@ -25,13 +25,6 @@ def make_comparation():
     matches = result[0][0]
     unmatched = result[1][0]
 
-    # Impresion de resultados por consola
-    print("Coincidencias (matches):")
-    print(matches)
-
-    print("\nProductos sin coincidencias (unmatched):")
-    print(unmatched)
-
     # Obtencion de IDs para segunda consulta
     array_productos = matches["idproducto"].tolist()
 
