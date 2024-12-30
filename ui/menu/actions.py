@@ -5,9 +5,9 @@ from PyQt5.QtWidgets import QMessageBox
 def normalizar(window):
     normalizer.normalize(window)
 
-def comparar():
-    # Función para manejar la acción "Nuevo Proceso"
-    comparator.comparate()
+def comparar(window):
+    # Función para manejar la acción "Nuevo Proceso"s
+    comparator.comparate(window)
 
 def salir():
     # Función para manejar la acción "Salir"

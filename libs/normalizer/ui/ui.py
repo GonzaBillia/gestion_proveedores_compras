@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
     QCheckBox, QMessageBox, QDialog, QScrollArea, QFrame, QLineEdit, QHBoxLayout,
-    QWidget
+    QWidget, QSpinBox
 )
 from PyQt5.QtCore import Qt
 from libs.normalizer.controllers.file_controller import FileController
@@ -13,7 +13,7 @@ class ExcelProcessorApp(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Excel Processor")
-        self.setGeometry(100, 100, 900, 500)
+        self.setGeometry(100, 100, 600, 300)
 
         # Instances of separated logic
         self.file_manager = FileController()
@@ -72,17 +72,35 @@ class ExcelProcessorApp(QMainWindow):
                 checkboxes.append(checkbox)
                 layout.addWidget(checkbox)
 
+            # SpinBox para seleccionar la línea de encabezado
+            spin_box_label = QLabel("Línea de encabezado:", sheet_selection_dialog)
+            layout.addWidget(spin_box_label)
+
+            spin_box = QSpinBox(sheet_selection_dialog)
+            spin_box.setMinimum(1)
+            spin_box.setMaximum(100)
+            spin_box.setValue(self.header_line)  # Valor inicial desde self.header_line
+            layout.addWidget(spin_box)
+
+            # Botón para procesar las hojas seleccionadas
             process_button = QPushButton("Procesar hojas seleccionadas", sheet_selection_dialog)
-            process_button.clicked.connect(lambda: self.set_sheet_selection(file, checkboxes, sheet_names, sheet_selection_dialog))
+            process_button.clicked.connect(lambda: self.set_sheet_selection(
+                file, checkboxes, sheet_names, sheet_selection_dialog, spin_box.value()
+            ))
             layout.addWidget(process_button)
 
             sheet_selection_dialog.exec_()
 
-    def set_sheet_selection(self, file, checkboxes, sheet_names, dialog):
+    def set_sheet_selection(self, file, checkboxes, sheet_names, dialog, header_line):
+        """
+        Establece las hojas seleccionadas y la línea de encabezado para un archivo.
+        """
         selected_sheets = [sheet for checkbox, sheet in zip(checkboxes, sheet_names) if checkbox.isChecked()]
         self.file_manager.set_sheet_selection(file, selected_sheets)
+        self.header_line = header_line  # Actualiza self.header_line con el valor del SpinBox
         dialog.accept()
         self.process_next_file()
+
 
     def process_next_file(self):
         try:

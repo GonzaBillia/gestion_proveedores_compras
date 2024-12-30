@@ -19,7 +19,7 @@ def configure_menu(window: QMainWindow):
 
     # Opción "Comparar"
     comparar_action = QAction("Comparar con Base de Datos", window)
-    comparar_action.triggered.connect(comparar)  # Sin paréntesis
+    comparar_action.triggered.connect(lambda: comparar(window))  # Sin paréntesis
     menu_procesos.addAction(comparar_action)
 
     # Separador

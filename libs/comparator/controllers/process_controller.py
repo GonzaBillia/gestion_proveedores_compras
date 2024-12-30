@@ -1,8 +1,16 @@
 from libs.comparator.controllers.db_controller import fetch_products_by_barcode, fetch_products_matched
 from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, find_unmatches_barcodes
 from libs.comparator.services.compare_algorythms.compare_provider import compare_by_provider
-from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_to_excel
-from libs.comparator.ui.main_window import pedir_ubicacion_archivo
+from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_to_excel, pedir_ubicacion_archivo
+from libs.comparator.services.reports.reports import make_report
+
+def read_list(file_path):
+    # Lectura y limpieza de archivo
+    provider_df = read_file(file_path)
+    provider_df = normalize_columns(provider_df)
+    provider_df = provider_df.drop_duplicates(subset='ean')
+
+    return provider_df
 
 def make_comparation():
     # ARCHIVO Proveedor
@@ -64,3 +72,15 @@ def setup_report(matches_df, processed_matches_df, unmatched_cb):
     ]
 
     return report_array
+
+def process():
+    # TEMP
+    id_provider = 18
+
+    unmatched, matches, unmatched_cb = make_comparation()
+
+    quantio_matches_df = make_provider_comparation(matches, id_provider)
+
+    df_array = setup_report(unmatched, quantio_matches_df, unmatched_cb)
+
+    make_report(df_array)
