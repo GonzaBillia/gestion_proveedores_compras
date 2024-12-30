@@ -1,20 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox
-from libs.comparator import comparator
-
-def nuevo_proceso():
-    # Función para manejar la acción "Nuevo Proceso"
-    comparator.comparate()
-
-def salir():
-    # Función para manejar la acción "Salir"
-    respuesta = QMessageBox.question(
-        None,
-        "Salir",
-        "¿Estás seguro de que deseas salir?",
-        QMessageBox.Yes | QMessageBox.No
-    )
-    if respuesta == QMessageBox.Yes:
-        exit()
+from PyQt5.QtWidgets import QMainWindow, QAction
+from ui.menu.actions import normalizar, comparar, salir
 
 def configure_menu(window: QMainWindow):
     """
@@ -27,15 +12,20 @@ def configure_menu(window: QMainWindow):
     # Crear el menú "Procesos"
     menu_procesos = menu_bar.addMenu("Procesos")
 
-    # Opción "Nuevo Proceso"
-    nuevo_proceso_action = QAction("Nuevo Proceso", window)
-    nuevo_proceso_action.triggered.connect(nuevo_proceso)
-    menu_procesos.addAction(nuevo_proceso_action)
+    # Opción "Normalizar"
+    normalizar_action = QAction("Normalizar", window)
+    normalizar_action.triggered.connect(lambda: normalizar(window))  # Sin paréntesis
+    menu_procesos.addAction(normalizar_action)
+
+    # Opción "Comparar"
+    comparar_action = QAction("Comparar con Base de Datos", window)
+    comparar_action.triggered.connect(comparar)  # Sin paréntesis
+    menu_procesos.addAction(comparar_action)
 
     # Separador
     menu_procesos.addSeparator()
 
     # Opción "Salir"
     salir_action = QAction("Salir", window)
-    salir_action.triggered.connect(salir)
+    salir_action.triggered.connect(salir)  # Sin paréntesis
     menu_procesos.addAction(salir_action)
