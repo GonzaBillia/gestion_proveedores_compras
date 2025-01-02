@@ -7,7 +7,7 @@ from libs.comparator.ui.main_window import pedir_ubicacion_archivo
 def make_comparation():
     # ARCHIVO Proveedor
     # temp
-    provider_df_path = pedir_ubicacion_archivo()
+    provider_df_path, provider_name = pedir_ubicacion_archivo()
     # temp
 
     # Lectura y limpieza de archivo
@@ -42,19 +42,19 @@ def make_comparation():
     ]
 
     # Guardado de archivos
-    export_file_to_excel(result, 'resultados_avent.xlsx')
+    export_file_to_excel(result, f'resultados_{provider_name}.xlsx')
     print("se exporta matches raw")
-    export_file_to_excel(matches_p_with_names, 'matches_quantio_avent.xlsx')
+    export_file_to_excel(matches_p_with_names, f'matches_quantio_{provider_name}.xlsx')
     print("se exporta matches quantio")
 
-    return unmatched, matches_p, unmatched_cb, provider_list
+    return unmatched, matches_p, unmatched_cb, provider_list, provider_name
 
-def make_provider_comparation(provider_match, provider_list):
+def make_provider_comparation(provider_match, provider_list, provider_name):
     # Funcion de comparacion por proveedor
 
     result = compare_by_provider(provider_match, provider_list)
 
-    export_file_to_excel(result, 'resultado_por_proveedor_avent.xlsx')
+    export_file_to_excel(result, f'resultado_por_proveedor_{provider_name}.xlsx')
 
     return result[1][0]
 

@@ -4,7 +4,7 @@ from libs.comparator.services.reports.data_frames.barcode_report import format_c
 from libs.comparator.services.reports.data_frames.provider_report import format_provider_report
 from libs.comparator.controllers.file_controller import export_file_to_excel
 
-def make_report(data_frame_array):
+def make_report(data_frame_array, provider_name):
     missing_df = data_frame_array[0]
     provider_df = data_frame_array[1]
     codebar_df = data_frame_array[2]
@@ -19,4 +19,4 @@ def make_report(data_frame_array):
         (provider_report, 'Productos Solo en Base de Datos')
     ]
     
-    return export_file_to_excel(setup_report, f'reporte_{datetime.today().strftime('%Y-%m-%d')}.xlsx')
+    return export_file_to_excel(setup_report, f'reporte_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx')

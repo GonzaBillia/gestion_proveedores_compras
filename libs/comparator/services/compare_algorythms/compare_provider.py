@@ -36,7 +36,7 @@ def compare_by_provider(provider_df, provider_list):
         products_df['idproveedor'] = products_df['idproveedor'].astype(str)
 
         merge_result = pd.merge(products_df, provider_df, on=["idproveedor", "idproducto"], how="outer", indicator=True)
-        print(merge_result.columns)
+        
         # Filtrar solo las filas donde 'activo' sea igual a 'S'
         merge_result = merge_result[merge_result['activo_x'] == 'S']
 
