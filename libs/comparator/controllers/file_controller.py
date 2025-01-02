@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
+from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
 
 def setup_logger():
@@ -151,6 +152,8 @@ def export_file_to_excel(dataframes_with_names, filename):
 
     print(f"Archivo exportado exitosamente: {filename}")
 
+    return full_path
+
 # Función para aplicar estilos a cada hoja
 def apply_styles_to_sheet(sheet):
     # Añadir estilos a las celdas
@@ -179,3 +182,37 @@ def apply_styles_to_sheet(sheet):
             if cell.value:
                 max_length = max(max_length, len(str(cell.value)))
         sheet.column_dimensions[column_letter].width = max_length + 2  # Ajustar con un margen extra
+
+def format_costs_excel(input_path, quantio_col="C", provider_col="D"):
+    """
+    Carga un archivo Excel, aplica formato condicional para resaltar diferencias en precios entre dos columnas y guarda el archivo.
+
+    Args:
+        input_path (str): Ruta del archivo Excel de entrada.
+        output_path (str): Ruta donde se guardará el archivo Excel modificado.
+        quantio_col (str): Letra de la columna con los precios de Quantio.
+        provider_col (str): Letra de la columna con los precios del Proveedor.
+    """
+    # Cargar el archivo Excel existente
+    wb = load_workbook(input_path)
+    ws = wb.active
+
+    # Aplicar formato condicional
+    red_fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")  # Rojo
+    green_fill = PatternFill(start_color="CCFFCC", end_color="CCFFCC", fill_type="solid")  # Verde
+
+    # Fórmula para cuando Costo Quantio > Costo Proveedor
+    formula_red = f"${quantio_col}2>${provider_col}2"
+    rule_red = FormulaRule(formula=[formula_red], stopIfTrue=True, fill=red_fill)
+
+    # Fórmula para cuando Costo Quantio <= Costo Proveedor
+    formula_green = f"${quantio_col}2<={provider_col}2"
+    rule_green = FormulaRule(formula=[formula_green], stopIfTrue=True, fill=green_fill)
+
+    # Aplicar las reglas a la columna Costo Quantio
+    rango = f"{quantio_col}2:{quantio_col}{ws.max_row}"
+    ws.conditional_formatting.add(rango, rule_red)
+    ws.conditional_formatting.add(rango, rule_green)
+
+    # Guardar el archivo modificado
+    wb.save(input_path)

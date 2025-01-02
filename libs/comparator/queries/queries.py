@@ -7,6 +7,7 @@ PRODUCTS_MATCHED = """
         pr.IDProveedor AS IDProveedor,
         l.Nombre AS Laboratorio,
         p.IDLaboratorio,
+        p.Costo,
         p.Activo
     FROM 
         productos AS p

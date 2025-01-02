@@ -26,7 +26,7 @@ def fetch_products_matched(array_productos):
             logging.warning("La consulta no devolvió resultados.")
             return pd.DataFrame()  # Retorna un DataFrame vacío si no hay datos
 
-        columns = ['IDProducto', 'ean', 'descripcion', 'Proveedor', 'IDProveedor', 'Laboratorio', 'IDLaboratorio', 'Activo']
+        columns = ['IDProducto', 'ean', 'descripcion', 'Proveedor', 'IDProveedor', 'Laboratorio', 'IDLaboratorio', 'Costo', 'Activo']
         db_df = pd.DataFrame(result, columns=columns)
         
 
