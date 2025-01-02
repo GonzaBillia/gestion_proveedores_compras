@@ -1,5 +1,5 @@
 from libs.comparator.controllers.db_controller import fetch_products_by_barcode, fetch_products_matched
-from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, find_unmatches_barcodes
+from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, find_unmatches_barcodes, get_unique_providers
 from libs.comparator.services.compare_algorythms.compare_provider import compare_by_provider
 from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_to_excel
 from libs.comparator.ui.main_window import pedir_ubicacion_archivo
@@ -32,25 +32,27 @@ def make_comparation():
     # Consulta de productos coincidentes con lista de proveedor
     matches_p = fetch_products_matched(array_productos)
 
-    matches_p_with_names = [
-        (matches_p, 'Productos matched')
-    ]
-
     unmatched_cb = find_unmatches_barcodes(matches, matches_p)
+
+    provider_datalist, provider_list = get_unique_providers(matches_p)
+
+    matches_p_with_names = [
+        (matches_p, 'Productos matched'),
+        (provider_datalist, 'Proveedores Encontrados')
+    ]
 
     # Guardado de archivos
     export_file_to_excel(result, 'resultados_avent.xlsx')
+    print("se exporta matches raw")
     export_file_to_excel(matches_p_with_names, 'matches_quantio_avent.xlsx')
+    print("se exporta matches quantio")
 
-    return unmatched, matches_p, unmatched_cb
+    return unmatched, matches_p, unmatched_cb, provider_list
 
-def make_provider_comparation(provider_match, id_provider):
+def make_provider_comparation(provider_match, provider_list):
     # Funcion de comparacion por proveedor
 
-    result = compare_by_provider(provider_match, id_provider)
-
-    print("\nProductos que solo están en tu base de datos:")
-    print(result[1][0])
+    result = compare_by_provider(provider_match, provider_list)
 
     export_file_to_excel(result, 'resultado_por_proveedor_avent.xlsx')
 

@@ -1,34 +1,54 @@
 import pandas as pd
 from libs.comparator.controllers.db_controller import fetch_products_by_provider
 
-def compare_by_provider(provider_df, id_provider):
-    # Se encarga de mostrar todos los productos que estan a nombre de ese proveedor pero no aparecen en la lista, con el objetivo de ver como cambiar el precio, re categorizarlo, etc.
+def compare_by_provider(provider_df, provider_list):
+    """
+    Compara los productos asociados a cada proveedor en la lista contra los productos en el DataFrame.
+    
+    Args:
+        provider_df (pd.DataFrame): DataFrame que contiene los productos y sus proveedores.
+        provider_list (list): Lista de tuplas con (idproveedor, proveedor).
 
-    products_df = fetch_products_by_provider(id_provider)
-    products_df.columns = products_df.columns.str.lower()
+    Returns:
+        list: Una lista de tuplas con los DataFrames resultantes y el nombre del proveedor asociado.
+    """
+    if not provider_list:  # Si la lista está vacía, detener la ejecución
+        raise ValueError("La lista de proveedores está vacía.")
+    
+    all_results = []
 
-    # Asegurarnos de que las columnas 'idproveedor' existan en ambos DataFrames
-    if 'idproveedor' not in provider_df.columns or 'idproveedor' not in products_df.columns:
-        print(provider_df.columns)
-        print(products_df.columns)
-        raise ValueError("Ambos DataFrames deben incluir una columna llamada 'idproveedor'.")
+    for idproveedor, proveedor in provider_list:
+        print(f"Procesando proveedor: {proveedor} (ID: {idproveedor})")
+        
+        products_df = fetch_products_by_provider(idproveedor)
+        products_df.columns = products_df.columns.str.lower()
 
-    # Convertir las columnas 'idproveedor' a string para evitar errores de tipo
-    provider_df['idproveedor'] = provider_df['idproveedor'].astype(str)
-    products_df['idproveedor'] = products_df['idproveedor'].astype(str)
+        if products_df.empty:  # Verificar si el DataFrame está vacío
+            print(f"No se encontraron productos para el proveedor: {proveedor}")
+            continue
 
-    # Realizar un merge con indicador para identificar no coincidencias
-    merge_result = pd.merge(products_df, provider_df, on=["idproveedor","idproducto"], how="outer", indicator=True)
+        if 'idproveedor' not in provider_df.columns or 'idproveedor' not in products_df.columns:
+            print(provider_df.columns)
+            print(products_df.columns)
+            raise ValueError("Ambos DataFrames deben incluir una columna llamada 'idproveedor'.")
 
-    solo_base_datos = merge_result[merge_result["_merge"] == "left_only"]
-    coincidencias = merge_result[merge_result["_merge"] == "both"]
+        provider_df['idproveedor'] = provider_df['idproveedor'].astype(str)
+        products_df['idproveedor'] = products_df['idproveedor'].astype(str)
 
-    df_with_names = [
-        (coincidencias, 'coincidencias'),
-        (solo_base_datos, 'solo en base de datos')
-    ]
+        merge_result = pd.merge(products_df, provider_df, on=["idproveedor", "idproducto"], how="outer", indicator=True)
+        print(merge_result.columns)
+        # Filtrar solo las filas donde 'activo' sea igual a 'S'
+        merge_result = merge_result[merge_result['activo_x'] == 'S']
 
-    return df_with_names
+        solo_base_datos = merge_result[merge_result["_merge"] == "left_only"]
+        coincidencias = merge_result[merge_result["_merge"] == "both"]
+
+        all_results.append((coincidencias, f"coincidencias_{proveedor}"))
+        all_results.append((solo_base_datos, f"solo_base_datos_{proveedor}"))
+
+    return all_results
+
+
 
 
 

@@ -43,3 +43,24 @@ def find_unmatches_barcodes(provider_df, db_df):
     df_merge = pd.merge(provider_df, db_df, on='idproducto', how='outer', suffixes=('_1', '_2'))
 
     return df_merge
+
+def get_unique_providers(df):
+    """
+    Obtiene los valores únicos de la columna 'idproveedor' y los valores correspondientes
+    de la columna 'proveedor', y los guarda en un array.
+
+    Args:
+        df (pd.DataFrame): El DataFrame que contiene las columnas 'idproveedor' y 'proveedor'.
+
+    Returns:
+        list: Una lista de tuplas con valores únicos (idproveedor, proveedor).
+    """
+    # Eliminar duplicados basándose en 'idproveedor' y conservar el primero encontrado
+    unique_providers = df[['idproveedor', 'proveedor']].drop_duplicates(subset=['idproveedor'])
+
+
+    # Convertir a una lista de tuplas (idproveedor, proveedor)
+    provider_list = unique_providers.values.tolist()
+    print(provider_list)
+
+    return unique_providers, provider_list

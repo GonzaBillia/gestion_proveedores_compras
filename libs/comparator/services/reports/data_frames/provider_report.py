@@ -10,11 +10,15 @@ def format_provider_report(df):
     Returns:
         pd.DataFrame: El DataFrame filtrado con las columnas especificadas.
     """
+
+    # Filtrar por productos activos
+    df_activos = df[df['activo_x'] == 'S']
+
     # Columnas que deseas seleccionar
     columnas = ['idproducto', 'ean_x', 'descripcion_x', 'proveedor_x', 'laboratorio_x']
 
     # Filtrar el DataFrame con las columnas especificadas
-    df_formateado = df[columnas].copy()
+    df_formateado = df_activos[columnas].copy()
 
     # Ordenar por 'laboratorio_x'
     df = df_formateado.sort_values(by='laboratorio_x')
