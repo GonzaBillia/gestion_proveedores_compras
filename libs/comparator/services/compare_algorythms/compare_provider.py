@@ -20,8 +20,6 @@ def compare_by_provider(provider_df, id_provider):
     # Realizar un merge con indicador para identificar no coincidencias
     merge_result = pd.merge(products_df, provider_df, on=["idproveedor","idproducto"], how="outer", indicator=True)
 
-    print(merge_result["_merge"].value_counts())
-
     solo_base_datos = merge_result[merge_result["_merge"] == "left_only"]
     coincidencias = merge_result[merge_result["_merge"] == "both"]
 

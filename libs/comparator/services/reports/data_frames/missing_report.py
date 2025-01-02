@@ -16,6 +16,16 @@ def format_missing_report(df):
     # Filtrar el DataFrame con las columnas especificadas
     df_formateado = df[columnas].copy()
 
+    # Renombrar las columnas
+    df_formateado.rename(
+        columns={
+            'ean': 'EAN',
+            'descripcion': 'Descripcion',
+            'precio_costo': 'Precio Costo'
+        },
+        inplace=True
+    )
+
     # Retornar únicamente el DataFrame formateado
     return df_formateado
 

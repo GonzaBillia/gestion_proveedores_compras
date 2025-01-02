@@ -1,6 +1,9 @@
 import logging
 import pandas as pd
 import os
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
+from openpyxl.utils import get_column_letter
 
 def setup_logger():
     """Setup logger for the file controller."""
@@ -115,6 +118,8 @@ import pandas as pd
 
 def export_file_to_excel(dataframes_with_names, filename):
     path = 'C:\\Users\\Administrador\\Documents\\Gonzalo\\archivos\\lista proveedores\\comparados\\'
+
+    full_path = path + filename
     """
     Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
 
@@ -129,7 +134,7 @@ def export_file_to_excel(dataframes_with_names, filename):
         return
 
     # Exportar a Excel
-    with pd.ExcelWriter((path + filename), engine='openpyxl') as writer:
+    with pd.ExcelWriter(full_path, engine='openpyxl') as writer:
         for dataframe, sheet_name in dataframes_with_names:
             # Verificar que el DataFrame no esté vacío y sea válido
             if dataframe is not None and not dataframe.empty:
@@ -137,4 +142,40 @@ def export_file_to_excel(dataframes_with_names, filename):
             else:
                 print(f"El DataFrame asociado a la hoja '{sheet_name}' está vacío o no existe.")
 
+    # Cargar el archivo con openpyxl para aplicar estilos
+    workbook = load_workbook(full_path)
+    for sheet_name in workbook.sheetnames:
+        sheet = workbook[sheet_name]
+        apply_styles_to_sheet(sheet)
+    workbook.save(full_path)
+
     print(f"Archivo exportado exitosamente: {filename}")
+
+# Función para aplicar estilos a cada hoja
+def apply_styles_to_sheet(sheet):
+    # Añadir estilos a las celdas
+    for row in sheet.iter_rows():
+        for cell in row:
+            # Añadir bordes
+            thin_border = Border(
+                left=Side(style="thin"),
+                right=Side(style="thin"),
+                top=Side(style="thin"),
+                bottom=Side(style="thin")
+            )
+            cell.border = thin_border
+            # Centrar el texto
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            # Aplicar estilo especial a la primera fila (cabecera)
+            if cell.row == 1:
+                cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Color amarillo
+                cell.font = Font(bold=True)  # Texto en negrita
+    
+    # Ajustar el ancho de las columnas
+    for col_idx in range(1, sheet.max_column + 1):
+        column_letter = get_column_letter(col_idx)
+        max_length = 0
+        for cell in sheet[column_letter]:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        sheet.column_dimensions[column_letter].width = max_length + 2  # Ajustar con un margen extra

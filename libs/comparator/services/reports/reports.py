@@ -15,7 +15,7 @@ def make_report(data_frame_array):
 
     setup_report = [
         (missing_report, 'Posibles Incorporaciones'),
-        (codebar_report, 'Codigos de Barras Incorrectos'),
+        (codebar_report, 'Codigos Principales Incorrectos'),
         (provider_report, 'Productos Solo en Base de Datos')
     ]
     

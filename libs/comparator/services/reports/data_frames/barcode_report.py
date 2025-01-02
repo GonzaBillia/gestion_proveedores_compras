@@ -27,6 +27,13 @@ def format_codebar_report(df):
     # Filtrar filas donde `ean_quantio` y `ean_proveedor` no coincidan
     df_no_coinciden = df_formateado[df_formateado['ean_quantio'] != df_formateado['ean_proveedor']]
 
+    df_no_coinciden.rename(columns={
+        'idproducto_1': 'ID Producto',
+        'ean_1': 'EAN Proveedor',
+        'ean_2': 'EAN Quantio',
+        'descripcion_2': 'Descripcion'
+    }, inplace=True)
+
     # Retornar únicamente el DataFrame formateado
     return df_no_coinciden
 

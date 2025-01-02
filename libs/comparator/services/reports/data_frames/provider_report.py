@@ -36,5 +36,17 @@ def format_provider_report(df):
     # Crear el DataFrame final con los saltos
     df_result = pd.DataFrame(result_rows)
 
+    # Renombrar las columnas
+    df_result.rename(
+        columns={
+            'idproducto': 'ID Producto',
+            'ean_x': 'EAN',
+            'descripcion_x': 'Descripcion',
+            'proveedor_x': 'Proveedor',
+            'laboratorio_x': 'Laboratorio'
+        },
+        inplace=True
+    )
+
     # Retornar únicamente el DataFrame formateado
     return df_result
