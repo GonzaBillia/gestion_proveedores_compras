@@ -2,7 +2,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import FormulaRule
 
-def make_costs_report(df, output_path):
+def make_costs_report(df):
     """
     Renombra las columnas de un DataFrame y aplica estilos condicionales
     al exportar los datos a un archivo Excel.
@@ -20,3 +20,5 @@ def make_costs_report(df, output_path):
             'precio_costo': 'Costo Proveedor'
         }
     )
+
+    return df
