@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import (
     QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
-    QMessageBox, QProgressBar, QHBoxLayout, QWidget
+    QMessageBox, QProgressBar, QHBoxLayout, QWidget, QInputDialog
 )
 from libs.comparator.ui.threads.worker_thread import WorkerThread
 
@@ -76,19 +76,20 @@ class ListComparator(QMainWindow):
         self.layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
 
     def load_and_start_tasks(self):
-        file_path = self.pedir_ubicacion_archivo()
+        file_path, provider_name = self.pedir_ubicacion_archivo()
         if not file_path:
             QMessageBox.warning(self, "Advertencia", "No se seleccionó ningún archivo.")
             return
 
         # Deshabilitar el botón y mostrar progreso
         self.start_button.setDisabled(True)
-        self.start_tasks(file_path)
+        self.start_tasks(file_path, provider_name)
 
-    def start_tasks(self, provider_df_path):
+    def start_tasks(self, provider_df_path, provider_name):
         # Configurar el hilo de trabajo
         self.worker_thread = WorkerThread()
         self.worker_thread.provider_df = provider_df_path
+        self.worker_thread.provider_name = provider_name
         self.worker_thread.task_completed.connect(self.update_task_ui)
         self.worker_thread.all_tasks_completed.connect(self.complete_all_tasks)
         self.worker_thread.start()
@@ -113,6 +114,7 @@ class ListComparator(QMainWindow):
         QMessageBox.information(self, "Completado", "Todas las tareas han finalizado.")
 
     def pedir_ubicacion_archivo(self):
+        # Abrir el diálogo para seleccionar el archivo
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
         file_path, _ = QFileDialog.getOpenFileName(
@@ -122,4 +124,13 @@ class ListComparator(QMainWindow):
             "Archivos soportados (*.xlsx *.csv *.pdf *.txt);;Archivos de Excel (*.xlsx);;Archivos CSV (*.csv);;Archivos PDF (*.pdf);;Archivos de texto (*.txt)",
             options=options,
         )
-        return file_path if file_path else None
+        # Pedir el nombre del proveedor
+        nombre_proveedor, ok = QInputDialog.getText(self, "Nombre del Proveedor", "Ingrese el nombre del proveedor:")
+        
+        if not ok or not nombre_proveedor:
+            QMessageBox.warning(self, "Advertencia", "No se ingresó ningún nombre de proveedor.")
+            return None, None
+
+
+        # Retornar ambos valores
+        return nombre_proveedor, file_path if file_path else None
