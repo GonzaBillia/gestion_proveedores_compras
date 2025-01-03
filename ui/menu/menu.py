@@ -1,12 +1,8 @@
-from PyQt5.QtWidgets import QMainWindow, QAction
+from PyQt5.QtWidgets import QMainWindow, QAction, QMdiSubWindow
+from PyQt5.QtCore import Qt
 from ui.menu.actions import normalizar, comparar, salir
 
 def configure_menu(window: QMainWindow):
-    """
-    Configura el menú de la ventana principal.
-    :param window: Instancia de QMainWindow
-    """
-    # Crear la barra de menú
     menu_bar = window.menuBar()
 
     # Crear el menú "Procesos"
@@ -14,12 +10,12 @@ def configure_menu(window: QMainWindow):
 
     # Opción "Normalizar"
     normalizar_action = QAction("Normalizar", window)
-    normalizar_action.triggered.connect(lambda: normalizar(window))  # Sin paréntesis
+    normalizar_action.triggered.connect(lambda: load_widget(window, normalizar))
     menu_procesos.addAction(normalizar_action)
 
     # Opción "Comparar"
     comparar_action = QAction("Comparar con Base de Datos", window)
-    comparar_action.triggered.connect(lambda: comparar(window))  # Sin paréntesis
+    comparar_action.triggered.connect(lambda: load_widget(window, comparar))
     menu_procesos.addAction(comparar_action)
 
     # Separador
@@ -27,5 +23,21 @@ def configure_menu(window: QMainWindow):
 
     # Opción "Salir"
     salir_action = QAction("Salir", window)
-    salir_action.triggered.connect(salir)  # Sin paréntesis
+    salir_action.triggered.connect(salir)
     menu_procesos.addAction(salir_action)
+
+def load_widget(window: QMainWindow, widget_function):
+    """
+    Agrega un nuevo widget como una subventana dentro del área MDI.
+    """
+    # Crear el nuevo widget usando la función proporcionada
+    widget = widget_function(window)
+
+    # Crear una subventana MDI
+    sub_window = QMdiSubWindow()
+    sub_window.setWidget(widget)
+    sub_window.setAttribute(Qt.WA_DeleteOnClose)
+
+    # Agregar la subventana al área MDI
+    window.mdi_area.addSubWindow(sub_window)
+    sub_window.show()

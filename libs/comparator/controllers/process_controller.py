@@ -21,6 +21,7 @@ def make_comparation(provider_df, update_ui_callback):
     :param update_ui_callback: Función para actualizar la UI.
     :return: unmatched, matches_p, unmatched_cb.
     """
+    provider_df = read_list(provider_df)
     # Tarea 1: Traer productos desde la base de datos
     db_df = fetch_products_by_barcode()
     update_ui_callback(0)  # Actualizar la UI después de la tarea
