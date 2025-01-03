@@ -1,10 +1,9 @@
 from libs.comparator.controllers.db_controller import fetch_products_by_barcode, fetch_products_matched
 from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, find_unmatches_barcodes, get_unique_providers
 from libs.comparator.services.compare_algorythms.compare_provider import compare_by_provider
-from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_to_excel, pedir_ubicacion_archivo
+from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_to_excel
 from libs.comparator.services.reports.reports import make_report
 from libs.comparator.services.compare_algorythms.compare_costs import make_cost_comparation
-from libs.comparator.ui.main_window import pedir_ubicacion_archivo
 
 
 def make_comparation(provider_path, provider_name, update_ui_callback):
