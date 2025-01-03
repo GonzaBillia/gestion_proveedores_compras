@@ -1,36 +1,22 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox
-from libs.comparator import comparator
-
-def nuevo_proceso():
-    # Función para manejar la acción "Nuevo Proceso"
-    comparator.comparate()
-
-def salir():
-    # Función para manejar la acción "Salir"
-    respuesta = QMessageBox.question(
-        None,
-        "Salir",
-        "¿Estás seguro de que deseas salir?",
-        QMessageBox.Yes | QMessageBox.No
-    )
-    if respuesta == QMessageBox.Yes:
-        exit()
+from PyQt5.QtWidgets import QMainWindow, QAction, QMdiSubWindow
+from PyQt5.QtCore import Qt
+from ui.menu.actions import normalizar, comparar, salir
 
 def configure_menu(window: QMainWindow):
-    """
-    Configura el menú de la ventana principal.
-    :param window: Instancia de QMainWindow
-    """
-    # Crear la barra de menú
     menu_bar = window.menuBar()
 
     # Crear el menú "Procesos"
     menu_procesos = menu_bar.addMenu("Procesos")
 
-    # Opción "Nuevo Proceso"
-    nuevo_proceso_action = QAction("Nuevo Proceso", window)
-    nuevo_proceso_action.triggered.connect(nuevo_proceso)
-    menu_procesos.addAction(nuevo_proceso_action)
+    # Opción "Normalizar"
+    normalizar_action = QAction("Normalizar", window)
+    normalizar_action.triggered.connect(lambda: load_widget(window, normalizar))
+    menu_procesos.addAction(normalizar_action)
+
+    # Opción "Comparar"
+    comparar_action = QAction("Comparar con Base de Datos", window)
+    comparar_action.triggered.connect(lambda: load_widget(window, comparar))
+    menu_procesos.addAction(comparar_action)
 
     # Separador
     menu_procesos.addSeparator()
@@ -39,3 +25,19 @@ def configure_menu(window: QMainWindow):
     salir_action = QAction("Salir", window)
     salir_action.triggered.connect(salir)
     menu_procesos.addAction(salir_action)
+
+def load_widget(window: QMainWindow, widget_function):
+    """
+    Agrega un nuevo widget como una subventana dentro del área MDI.
+    """
+    # Crear el nuevo widget usando la función proporcionada
+    widget = widget_function(window)
+
+    # Crear una subventana MDI
+    sub_window = QMdiSubWindow()
+    sub_window.setWidget(widget)
+    sub_window.setAttribute(Qt.WA_DeleteOnClose)
+
+    # Agregar la subventana al área MDI
+    window.mdi_area.addSubWindow(sub_window)
+    sub_window.show()

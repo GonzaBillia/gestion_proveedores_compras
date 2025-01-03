@@ -1,15 +1,21 @@
-from libs.comparator.controllers.process_controller import make_comparation, make_provider_comparation, setup_report
-from libs.comparator.services.compare_algorythms.compare_costs import make_cost_comparation
-from libs.comparator.services.reports.reports import make_report
+from PyQt5.QtWidgets import QMdiSubWindow
+from PyQt5.QtCore import Qt
+from libs.comparator.ui.main_window import ListComparator
 
+def comparate(parent_window):
+    """
+    Lanza la ventana de ListComparator como una subventana MDI.
+    """
+    for subwindow in parent_window.mdi_area.subWindowList():
+        if isinstance(subwindow.widget(), ListComparator):
+            subwindow.setFocus()
+            return
 
-def comparate():
-    unmatched, matches, unmatched_cb, costs_df, provider_list, provider_name = make_comparation()
+    # Crear la subventana
+    window = ListComparator()
+    sub_window = QMdiSubWindow()
+    sub_window.setWidget(window)
+    sub_window.setAttribute(Qt.WA_DeleteOnClose)
 
-    quantio_matches_df = make_provider_comparation(matches, provider_list, provider_name)
-
-    df_array = setup_report(unmatched, quantio_matches_df, unmatched_cb, costs_df)
-
-    make_report(df_array, provider_name)
-
-    
+    parent_window.mdi_area.addSubWindow(sub_window)
+    sub_window.show()

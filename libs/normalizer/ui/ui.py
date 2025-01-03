@@ -1,332 +1,249 @@
-import tkinter as tk
-import pandas as pd
-from tkinter import filedialog, messagebox, ttk
+import sys
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
+    QCheckBox, QMessageBox, QDialog, QScrollArea, QFrame, QLineEdit, QHBoxLayout,
+    QWidget, QSpinBox
+)
+from PyQt5.QtCore import Qt
 from libs.normalizer.controllers.file_controller import FileController
 from libs.normalizer.services.data_processor import DataProcessor
 
+class ExcelProcessorApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
-class ExcelProcessorApp:
-    def __init__(self, root):
-        """
-        Inicializa la aplicación principal.
-        :param root: Ventana principal de Tkinter.
-        """
-        self.root = root
-        self.root.title("Excel Processor")
-        self.root.geometry("900x500")
-        self.root.configure(bg="#e0e0e0")
+        self.setWindowTitle("Excel Processor")
+        self.setGeometry(100, 100, 600, 300)
 
-        # Instancias de lógica separada
+        # Instances of separated logic
         self.file_manager = FileController()
         self.data_processor = DataProcessor()
 
-        # Configuración de estilos
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure("TButton", font=("Arial", 12, "bold"), padding=10, foreground="white", background="#007bff")
-        style.map("TButton", background=[("active", "#0056b3"), ("!disabled", "#007bff")])
+        # Variables
+        self.process_by_sheets = False
+        self.header_line = 1
 
-        # Variables de la interfaz
-        self.process_by_sheets = tk.BooleanVar()
+        # Main layout
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout(self.central_widget)
 
-        # Crear los elementos de la interfaz
+        # Create UI elements
         self.create_widgets()
 
     def create_widgets(self):
-        """
-        Crea los elementos de la interfaz.
-        """
-        tk.Label(self.root, text="Escoge una o más opciones", font=("Arial", 16), bg="#e0e0e0").pack(pady=10)
-        ttk.Checkbutton(self.root, text="Procesar por hojas", variable=self.process_by_sheets).pack(pady=5)
-        ttk.Button(self.root, text="Subir archivos", command=self.upload_and_list_files).pack(pady=20)
+        self.label = QLabel("Escoge una o más opciones", self)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.label)
+
+        self.checkbox = QCheckBox("Procesar por hojas", self)
+        self.checkbox.stateChanged.connect(self.toggle_process_by_sheets)
+        self.layout.addWidget(self.checkbox)
+
+        self.upload_button = QPushButton("Subir archivos", self)
+        self.upload_button.clicked.connect(self.upload_and_list_files)
+        self.layout.addWidget(self.upload_button)
+
+    def toggle_process_by_sheets(self, state):
+        self.process_by_sheets = state == Qt.Checked
 
     def upload_and_list_files(self):
-        """
-        Muestra un cuadro de diálogo para seleccionar archivos Excel.
-        """
-        file_paths = filedialog.askopenfilenames(filetypes=[("Excel files", "*.xlsx *.xls")])
+        file_paths, _ = QFileDialog.getOpenFileNames(self, "Selecciona archivos Excel", "", "Excel files (*.xlsx *.xls)")
         if not file_paths:
             return
 
         self.file_manager.load_files(file_paths)
 
-        if self.process_by_sheets.get():
+        if self.process_by_sheets:
             self.show_sheet_selection()
         else:
             self.process_next_file()
 
     def show_sheet_selection(self):
-        """
-        Crea una ventana para seleccionar hojas de los archivos cargados.
-        """
         for file in self.file_manager.file_names:
             sheet_names = self.file_manager.get_sheet_names(file)
-            sheet_selection_window = tk.Toplevel(self.root)
-            sheet_selection_window.configure(bg="#e0e0e0")
-            sheet_selection_window.title(f"Selecciona hojas para {file}")
+            sheet_selection_dialog = QDialog(self)
+            sheet_selection_dialog.setWindowTitle(f"Selecciona hojas para {file}")
+            layout = QVBoxLayout(sheet_selection_dialog)
 
-            sheet_checkboxes = [tk.BooleanVar() for _ in sheet_names]
-            for var, sheet in zip(sheet_checkboxes, sheet_names):
-                ttk.Checkbutton(sheet_selection_window, text=sheet, variable=var).pack(anchor='w', padx=10, pady=5)
+            checkboxes = []
+            for sheet in sheet_names:
+                checkbox = QCheckBox(sheet, sheet_selection_dialog)
+                checkboxes.append(checkbox)
+                layout.addWidget(checkbox)
 
-            ttk.Button(
-                sheet_selection_window,
-                text="Procesar hojas seleccionadas",
-                command=lambda: self.set_sheet_selection(file, sheet_checkboxes, sheet_names, sheet_selection_window)
-            ).pack(pady=10)
+            # SpinBox para seleccionar la línea de encabezado
+            spin_box_label = QLabel("Línea de encabezado:", sheet_selection_dialog)
+            layout.addWidget(spin_box_label)
 
-    def set_sheet_selection(self, file, checkboxes, sheet_names, window):
+            spin_box = QSpinBox(sheet_selection_dialog)
+            spin_box.setMinimum(1)
+            spin_box.setMaximum(100)
+            spin_box.setValue(self.header_line)  # Valor inicial desde self.header_line
+            layout.addWidget(spin_box)
+
+            # Botón para procesar las hojas seleccionadas
+            process_button = QPushButton("Procesar hojas seleccionadas", sheet_selection_dialog)
+            process_button.clicked.connect(lambda: self.set_sheet_selection(
+                file, checkboxes, sheet_names, sheet_selection_dialog, spin_box.value()
+            ))
+            layout.addWidget(process_button)
+
+            sheet_selection_dialog.exec_()
+
+    def set_sheet_selection(self, file, checkboxes, sheet_names, dialog, header_line):
         """
-        Establece las hojas seleccionadas para un archivo.
+        Establece las hojas seleccionadas y la línea de encabezado para un archivo.
         """
-        selected_sheets = [sheet for var, sheet in zip(checkboxes, sheet_names) if var.get()]
+        selected_sheets = [sheet for checkbox, sheet in zip(checkboxes, sheet_names) if checkbox.isChecked()]
         self.file_manager.set_sheet_selection(file, selected_sheets)
-        window.destroy()
+        self.header_line = header_line  # Actualiza self.header_line con el valor del SpinBox
+        dialog.accept()
         self.process_next_file()
 
-    def process_next_file(self):
-        """
-        Procesa el siguiente archivo en la lista.
-        """
-        try:
-            # Si existe un contenedor anterior, destrúyelo
-            if hasattr(self, 'current_file_frame') and self.current_file_frame:
-                self.current_file_frame.destroy()
 
+    def process_next_file(self):
+        try:
             file_generator = self.file_manager.get_next_file()
             file, sheet = next(file_generator)
-
-            self.current_sheet_name = sheet
-            self.header_line = tk.IntVar(value=1)  # Inicializar `header_line` aquí
-
-            # Crear un contenedor para los widgets del archivo actual
-            self.current_file_frame = tk.Frame(self.root, bg="#e0e0e0")
-            self.current_file_frame.pack(pady=10, fill=tk.BOTH)
-
-            header_line_label = tk.Label(
-                self.current_file_frame,
-                text=f"Línea de encabezado para {file} - Hoja: {sheet if sheet else 'Completa'}:",
-                bg="#e0e0e0"
-            )
-            header_line_label.pack()
-
-            header_line_entry = tk.Entry(self.current_file_frame, textvariable=self.header_line)
-            header_line_entry.pack()
-
-            button_read_header = ttk.Button(
-                self.current_file_frame,
-                text=f"Leer encabezados de {file} - Hoja: {sheet if sheet else 'Completa'}",
-                command=lambda: self.read_header(file, sheet)
-            )
-            button_read_header.pack(pady=10)
+            self.read_header(file, sheet)
         except StopIteration:
-            # Mostrar opciones finales cuando no hay más archivos
             self.show_final_options()
         except Exception as e:
-            messagebox.showerror("Error", f"Error al procesar el siguiente archivo: {str(e)}")
-
+            QMessageBox.critical(self, "Error", f"Error al procesar el siguiente archivo: {str(e)}")
 
     def read_header(self, file_name, sheet_name):
-        """
-        Lee el encabezado del archivo y muestra las columnas en una ventana.
-        """
-        header_row = self.header_line.get() - 1
+        header_row = self.header_line - 1
         df = self.file_manager.read_excel(file_name, sheet_name, header_row)
-        if isinstance(df, pd.DataFrame):  # Verificar que sea un DataFrame
-            if df.empty:
-                messagebox.showerror("Error", f"El archivo {file_name} (Hoja: {sheet_name}) está vacío.")
-                return
-            self.data_processor.df = df
-            self.create_columns_window(file_name, sheet_name)
-        else:
-            messagebox.showerror("Error", "Error al leer el archivo. Por favor, verifica el archivo seleccionado.")
 
+        if df.empty:
+            QMessageBox.critical(self, "Error", f"El archivo {file_name} (Hoja: {sheet_name}) está vacío.")
+            return
+
+        self.data_processor.df = df
+        self.create_columns_window(file_name, sheet_name)
 
     def create_columns_window(self, file_name, sheet_name):
-        """
-        Crea una ventana para mostrar y seleccionar columnas del archivo.
-        """
-        columns_window = tk.Toplevel(self.root)
-        columns_window.geometry("900x400")
-        columns_window.configure(bg="#e0e0e0")
-        columns_window.title(f"Cabeceras del archivo {file_name} - Hoja: {sheet_name}")
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Cabeceras del archivo {file_name} - Hoja: {sheet_name}")
+        dialog.resize(900, 400)
 
-        frame_canvas = tk.Frame(columns_window)
-        frame_canvas.pack(fill=tk.BOTH, expand=True)
+        layout = QVBoxLayout(dialog)
 
-        canvas = tk.Canvas(frame_canvas, bg="#e0e0e0")
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        scrollbar_y = tk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
-        scrollbar_y.pack(side=tk.RIGHT, fill="y")
-
-        frame_scrollable = tk.Frame(canvas, bg="#e0e0e0")
-        canvas.create_window((0, 0), window=frame_scrollable, anchor="nw")
-
-        def on_frame_configure(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-
-        frame_scrollable.bind("<Configure>", on_frame_configure)
+        scroll_area = QScrollArea(dialog)
+        scroll_area.setWidgetResizable(True)
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_area.setWidget(scroll_content)
 
         self.checkboxes = []
         self.order_inputs = []
 
-        for row, col in enumerate(self.data_processor.df.columns, start=1):
-            var = tk.BooleanVar()
-            cb = ttk.Checkbutton(frame_scrollable, text=col, variable=var)
-            cb.grid(row=row, column=0, sticky="w", padx=3, pady=3)
-            self.checkboxes.append(var)
+        for col in self.data_processor.df.columns:
+            checkbox = QCheckBox(col, scroll_content)
+            self.checkboxes.append(checkbox)
+            scroll_layout.addWidget(checkbox)
 
-            order_var = tk.IntVar(value=0)
-            order_entry = tk.Entry(frame_scrollable, textvariable=order_var, width=5)
-            order_entry.grid(row=row, column=1, padx=5, pady=3)
-            self.order_inputs.append(order_var)
+            order_input = QLineEdit(scroll_content)
+            order_input.setPlaceholderText("Orden")
+            self.order_inputs.append(order_input)
+            scroll_layout.addWidget(order_input)
 
-        ttk.Button(
-            frame_scrollable,
-            text="Agregar columnas seleccionadas",
-            command=lambda: self.select_columns(columns_window)
-        ).grid(row=row + 1, column=0, columnspan=2, pady=10)
+        layout.addWidget(scroll_area)
 
-    def select_columns(self, window):
-        """
-        Procesa las columnas seleccionadas y las combina en el DataFrame final.
-        """
+        add_button = QPushButton("Agregar columnas seleccionadas", dialog)
+        add_button.clicked.connect(lambda: self.select_columns(dialog))
+        layout.addWidget(add_button)
+
+        dialog.exec_()
+
+    def select_columns(self, dialog):
         try:
-            # Obtener las columnas seleccionadas y sus órdenes
             selected_columns_order = sorted(
                 [
-                    (order.get(), index)
+                    (int(order.text()), index)
                     for index, order in enumerate(self.order_inputs)
-                    if self.checkboxes[index].get() and order.get() > 0
+                    if self.checkboxes[index].isChecked() and order.text().isdigit()
                 ]
             )
 
             if not selected_columns_order:
-                messagebox.showwarning("Advertencia", "No se seleccionaron columnas o no se asignaron órdenes válidas.")
+                QMessageBox.warning(self, "Advertencia", "No se seleccionaron columnas o no se asignaron órdenes válidas.")
                 return
 
-            # Combinar las columnas seleccionadas en el DataFrame final
             combined_df = self.data_processor.combine_columns(self.data_processor.df, selected_columns_order)
-            
+
             if combined_df.empty:
-                messagebox.showerror("Error", "No se pudieron combinar las columnas seleccionadas.")
+                QMessageBox.critical(self, "Error", "No se pudieron combinar las columnas seleccionadas.")
                 return
 
-            # Mostrar mensaje de éxito
-            messagebox.showinfo("Éxito", "Columnas agregadas correctamente.")
-
-            # Avanzar al siguiente archivo
-            window.destroy()
-            # Actualizar la ventana principal (sin destruirla)
-            self.update_main_window()
-            self.process_next_file()
-
+            QMessageBox.information(self, "Éxito", "Columnas agregadas correctamente.")
+            dialog.accept()
         except Exception as e:
-            messagebox.showerror("Error", f"Ocurrió un error al procesar las columnas: {str(e)}")
-
-    def update_main_window(self):
-        """
-        Actualiza la ventana principal sin destruirla.
-        """
-        for widget in self.root.winfo_children():
-            widget.pack_forget()  # Oculta los elementos existentes
-
-        # Vuelve a mostrar las opciones finales
-        self.show_final_options()
+            QMessageBox.critical(self, "Error", f"Ocurrió un error al procesar las columnas: {str(e)}")
 
     def show_final_options(self):
-        """
-        Muestra opciones finales después de procesar todos los archivos.
-        """
-        ttk.Button(
-            self.root,
-            text="Generar archivo combinado",
-            command=self.generate_combined_file
-        ).pack(pady=20)
+        final_dialog = QDialog(self)
+        final_dialog.setWindowTitle("Opciones finales")
+        layout = QVBoxLayout(final_dialog)
 
-        ttk.Button(
-            self.root,
-            text="Agregar columna desde archivo de referencia",
-            command=self.upload_reference_file
-        ).pack(pady=10)
+        generate_button = QPushButton("Generar archivo combinado", final_dialog)
+        generate_button.clicked.connect(self.generate_combined_file)
+        layout.addWidget(generate_button)
+
+        reference_button = QPushButton("Agregar columna desde archivo de referencia", final_dialog)
+        reference_button.clicked.connect(self.upload_reference_file)
+        layout.addWidget(reference_button)
+
+        final_dialog.exec_()
 
     def generate_combined_file(self):
-        """
-        Genera y guarda el archivo combinado.
-        """
         if not self.data_processor.df_combined.empty:
-            rename_window = tk.Toplevel(self.root)
-            rename_window.title("Renombrar columnas")
-            rename_window.configure(bg="#e0e0e0")
-
-            tk.Label(rename_window, text="Renombra las columnas antes de guardar:", bg="#e0e0e0").pack(pady=10)
-
-            new_column_names = []
-            for idx, col in enumerate(self.data_processor.df_combined.columns):
-                frame = tk.Frame(rename_window, bg="#e0e0e0")
-                frame.pack(pady=5, padx=10, fill=tk.X)
-
-                tk.Label(frame, text=f"Columna {idx + 1}: {col}", bg="#e0e0e0").pack(side=tk.LEFT)
-                new_name_var = tk.StringVar(value=col)
-                tk.Entry(frame, textvariable=new_name_var, width=30).pack(side=tk.RIGHT, padx=5)
-                new_column_names.append(new_name_var)
-
-            def save_file():
-                renamed_columns = [var.get() for var in new_column_names]
-                self.data_processor.rename_columns(renamed_columns)
-
-                output_file = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("XLSX files", "*.xlsx")])
-                if output_file:
-                    self.data_processor.save_combined_file(output_file)
-                    messagebox.showinfo("Éxito", f"Archivo combinado guardado en: {output_file}")
-                    rename_window.destroy()
-
-            ttk.Button(rename_window, text="Guardar archivo", command=save_file).pack(pady=10)
+            output_file, _ = QFileDialog.getSaveFileName(self, "Guardar archivo combinado", "", "Excel files (*.xlsx)")
+            if output_file:
+                self.data_processor.save_combined_file(output_file)
+                QMessageBox.information(self, "Éxito", f"Archivo combinado guardado en: {output_file}")
         else:
-            messagebox.showerror("Error", "No hay datos para combinar.")
+            QMessageBox.critical(self, "Error", "No hay datos para combinar.")
 
     def upload_reference_file(self):
-        """
-        Muestra un cuadro de diálogo para cargar un archivo de referencia.
-        """
-        reference_file = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx *.xls")])
+        reference_file, _ = QFileDialog.getOpenFileName(self, "Selecciona archivo de referencia", "", "Excel files (*.xlsx *.xls)")
         if reference_file:
             self.data_processor.load_reference_file(reference_file)
             self.create_reference_window()
 
     def create_reference_window(self):
-        """
-        Crea una ventana para seleccionar columnas de referencia.
-        """
-        self.reference_window = tk.Toplevel(self.root)
-        self.reference_window.title("Columnas de referencia")
-        self.reference_window.configure(bg="#e0e0e0")
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Columnas de referencia")
+        layout = QVBoxLayout(dialog)
 
-        tk.Label(self.reference_window, text="Selecciona la columna de EAN y la columna a agregar:", bg="#e0e0e0").pack(pady=10)
-        self.id_column_var = tk.StringVar()
-        self.column_to_add_var = tk.StringVar()
+        id_label = QLabel("Columna de EAN:", dialog)
+        layout.addWidget(id_label)
 
-        tk.Label(self.reference_window, text="Columna de EAN:", bg="#e0e0e0").pack(pady=5)
-        tk.Entry(self.reference_window, textvariable=self.id_column_var).pack(pady=5)
+        self.id_column_input = QLineEdit(dialog)
+        layout.addWidget(self.id_column_input)
 
-        tk.Label(self.reference_window, text="Columna a agregar:", bg="#e0e0e0").pack(pady=5)
-        tk.Entry(self.reference_window, textvariable=self.column_to_add_var).pack(pady=5)
+        column_label = QLabel("Columna a agregar:", dialog)
+        layout.addWidget(column_label)
 
-        ttk.Button(self.reference_window, text="Agregar columna", command=self.add_reference_column).pack(pady=10)
+        self.column_to_add_input = QLineEdit(dialog)
+        layout.addWidget(self.column_to_add_input)
+
+        add_button = QPushButton("Agregar columna", dialog)
+        add_button.clicked.connect(self.add_reference_column)
+        layout.addWidget(add_button)
+
+        dialog.exec_()
 
     def add_reference_column(self):
-        """
-        Lógica para agregar columnas desde el archivo de referencia.
-        """
         try:
-            id_column_index = int(self.id_column_var.get().strip()) - 1
-            column_to_add_index = int(self.column_to_add_var.get().strip()) - 1
+            id_column_index = int(self.id_column_input.text()) - 1
+            column_to_add_index = int(self.column_to_add_input.text()) - 1
 
             updated_df, added_column = self.data_processor.add_reference_column(id_column_index, column_to_add_index)
-            messagebox.showinfo("Éxito", f"La columna '{added_column}' se ha agregado correctamente.")
-            self.reference_window.destroy()
+            QMessageBox.information(self, "Éxito", f"La columna '{added_column}' se ha agregado correctamente.")
         except ValueError:
-            messagebox.showerror("Error", "Por favor, ingresa índices válidos para las columnas.")
+            QMessageBox.critical(self, "Error", "Por favor, ingresa índices válidos para las columnas.")
         except Exception as e:
-            messagebox.showerror("Error", f"Ocurrió un error: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Ocurrió un error: {str(e)}")
+

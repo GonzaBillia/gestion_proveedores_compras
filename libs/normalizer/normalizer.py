@@ -1,7 +1,21 @@
-import tkinter as tk
+from PyQt5.QtWidgets import QMdiSubWindow
+from PyQt5.QtCore import Qt
 from libs.normalizer.ui.ui import ExcelProcessorApp
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = ExcelProcessorApp(root)
-    root.mainloop()
+def normalize(parent_window):
+    """
+    Lanza la ventana de ExcelProcessorApp como una subventana MDI.
+    """
+    for subwindow in parent_window.mdi_area.subWindowList():
+        if isinstance(subwindow.widget(), ExcelProcessorApp):
+            subwindow.setFocus()
+            return
+
+    # Crear la subventana
+    window = ExcelProcessorApp()
+    sub_window = QMdiSubWindow()
+    sub_window.setWidget(window)
+    sub_window.setAttribute(Qt.WA_DeleteOnClose)
+
+    parent_window.mdi_area.addSubWindow(sub_window)
+    sub_window.show()
