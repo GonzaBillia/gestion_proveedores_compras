@@ -58,22 +58,31 @@ class DataProcessor:
         """
         Combina columnas seleccionadas y las agrega al DataFrame combinado.
         :param df: DataFrame original.
-        :param selected_columns_order: Lista de tuplas (orden, índice de columna).
+        :param selected_columns_order: Lista de tuplas (orden, nombre original de la columna, nuevo nombre).
         :return: DataFrame combinado.
         """
         try:
-            selected_columns = [df.iloc[:, idx[1]].copy() for idx in selected_columns_order]
-            new_df = pd.concat(selected_columns, axis=1)
-            new_df.columns = [f"Column_{i+1}" for i in range(len(new_df.columns))]
+            # Extraer las columnas seleccionadas y renombrarlas
+            selected_columns = [
+                df[original_name].copy().rename(new_name)
+                for _, original_name, new_name in selected_columns_order
+            ]
 
+            # Concatenar las columnas seleccionadas
+            new_df = pd.concat(selected_columns, axis=1)
+
+            # Si el DataFrame combinado está vacío, inicializarlo
             if self.df_combined.empty:
                 self.df_combined = new_df
             else:
                 self.df_combined = pd.concat([self.df_combined, new_df], ignore_index=True)
+
             return self.df_combined
         except Exception as e:
             print(f"Error al combinar columnas: {e}")
             return pd.DataFrame()
+
+
 
     def load_reference_file(self, reference_file):
         """

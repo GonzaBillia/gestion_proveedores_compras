@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMdiSubWindow
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from libs.normalizer.ui.ui import ExcelProcessorApp
 
 def normalize(parent_window):
@@ -16,6 +16,8 @@ def normalize(parent_window):
     sub_window = QMdiSubWindow()
     sub_window.setWidget(window)
     sub_window.setAttribute(Qt.WA_DeleteOnClose)
+
+    sub_window.setMinimumSize(QSize(300, 200))
 
     parent_window.mdi_area.addSubWindow(sub_window)
     sub_window.show()

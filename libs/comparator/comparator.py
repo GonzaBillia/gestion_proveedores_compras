@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMdiSubWindow
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from libs.comparator.ui.main_window import ListComparator
 
 def comparate(parent_window):
@@ -16,6 +16,8 @@ def comparate(parent_window):
     sub_window = QMdiSubWindow()
     sub_window.setWidget(window)
     sub_window.setAttribute(Qt.WA_DeleteOnClose)
+
+    sub_window.setMinimumSize(QSize(400, 400))
 
     parent_window.mdi_area.addSubWindow(sub_window)
     sub_window.show()

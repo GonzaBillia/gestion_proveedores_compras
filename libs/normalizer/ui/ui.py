@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
     QCheckBox, QMessageBox, QDialog, QScrollArea, QFrame, QLineEdit, QHBoxLayout,
-    QWidget, QSpinBox
+    QWidget, QSpinBox, QInputDialog, QComboBox
 )
 from PyQt5.QtCore import Qt
 from libs.normalizer.controllers.file_controller import FileController
@@ -20,7 +20,7 @@ class ExcelProcessorApp(QMainWindow):
         self.data_processor = DataProcessor()
 
         # Variables
-        self.process_by_sheets = False
+        self.process_by_sheets = True
         self.header_line = 1
 
         # Main layout
@@ -37,6 +37,7 @@ class ExcelProcessorApp(QMainWindow):
         self.layout.addWidget(self.label)
 
         self.checkbox = QCheckBox("Procesar por hojas", self)
+        self.checkbox.setChecked(True)
         self.checkbox.stateChanged.connect(self.toggle_process_by_sheets)
         self.layout.addWidget(self.checkbox)
 
@@ -159,19 +160,28 @@ class ExcelProcessorApp(QMainWindow):
 
     def select_columns(self, dialog):
         try:
-            selected_columns_order = sorted(
-                [
-                    (int(order.text()), index)
-                    for index, order in enumerate(self.order_inputs)
-                    if self.checkboxes[index].isChecked() and order.text().isdigit()
-                ]
-            )
+            self.selected_columns = []
 
-            if not selected_columns_order:
+            for index, (checkbox, order_input) in enumerate(zip(self.checkboxes, self.order_inputs)):
+                if checkbox.isChecked():
+                    order_text = order_input.text()
+                    if order_text.isdigit():
+                        original_name = self.data_processor.df.columns[index]
+                        # Almacenar la tupla (orden, nombre original, nuevo nombre temporal)
+                        self.selected_columns.append((int(order_text), original_name, original_name))
+                    else:
+                        QMessageBox.warning(self, "Advertencia", f"La columna '{checkbox.text()}' tiene un orden inválido.")
+                        return
+
+            # Ordenar las columnas seleccionadas por el número de orden
+            self.selected_columns.sort()
+
+            if not self.selected_columns:
                 QMessageBox.warning(self, "Advertencia", "No se seleccionaron columnas o no se asignaron órdenes válidas.")
                 return
 
-            combined_df = self.data_processor.combine_columns(self.data_processor.df, selected_columns_order)
+            # Combinar las columnas seleccionadas
+            combined_df = self.data_processor.combine_columns(self.data_processor.df, self.selected_columns)
 
             if combined_df.empty:
                 QMessageBox.critical(self, "Error", "No se pudieron combinar las columnas seleccionadas.")
@@ -179,6 +189,7 @@ class ExcelProcessorApp(QMainWindow):
 
             QMessageBox.information(self, "Éxito", "Columnas agregadas correctamente.")
             dialog.accept()
+            self.show_final_options()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Ocurrió un error al procesar las columnas: {str(e)}")
 
@@ -196,9 +207,95 @@ class ExcelProcessorApp(QMainWindow):
         layout.addWidget(reference_button)
 
         final_dialog.exec_()
+    
+    def rename_columns_dialog(self, dataframe, parent=None):
+        """
+        Abre un cuadro de diálogo que permite seleccionar nuevos nombres de columnas desde un dropdown.
+        Utiliza las columnas seleccionadas previamente.
+        """
+        dialog = QDialog(parent)
+        dialog.setWindowTitle("Estandarizar Nombre de Columnas")
+        dialog.resize(400, 300)
+
+        layout = QVBoxLayout()
+
+        # Opciones predefinidas para renombrar las columnas
+        options = ["EAN", "DESCRIPCION", "PRECIO_COSTO", "IVA", "PRECIO_IVA", "DESCUENTO"]
+
+        # Lista para almacenar los nuevos nombres
+        new_column_names = []
+
+        # Crear un dropdown para cada columna seleccionada
+        for order, original_name, _ in self.selected_columns:
+            row_layout = QHBoxLayout()
+
+            # Etiqueta con el nombre de la columna original
+            label = QLabel(f"{original_name} (Orden: {order}):")
+            row_layout.addWidget(label)
+
+            # Dropdown con las opciones
+            combo_box = QComboBox()
+            combo_box.addItems(options)
+            row_layout.addWidget(combo_box)
+
+            # Agregar a la lista de nuevos nombres
+            new_column_names.append((original_name, combo_box))
+
+            layout.addLayout(row_layout)
+
+        # Botón de confirmación
+        btn_confirm = QPushButton("Confirmar")
+        layout.addWidget(btn_confirm)
+
+        dialog.setLayout(layout)
+
+        # Función para manejar el clic en "Confirmar"
+        def confirm():
+            # Obtener los nuevos nombres seleccionados por el usuario
+            renamed_columns = {original: combo.currentText() for original, combo in new_column_names}
+
+            # Validar que no haya nombres duplicados
+            if len(set(renamed_columns.values())) != len(renamed_columns):
+                QMessageBox.warning(dialog, "Error", "No puede haber nombres de columnas duplicados.")
+                return
+
+            # Aplicar los nuevos nombres al DataFrame
+            dataframe.rename(columns=renamed_columns, inplace=True)
+
+            # Actualizar la lista de columnas seleccionadas con los nuevos nombres
+            self.selected_columns = [
+                (order, original, renamed_columns[original])
+                for order, original, _ in self.selected_columns
+            ]
+
+            # Cerrar el diálogo
+            dialog.accept()
+
+        # Conectar el botón a la función de confirmación
+        btn_confirm.clicked.connect(confirm)
+
+        # Ejecutar el diálogo
+        dialog.exec_()
+
 
     def generate_combined_file(self):
         if not self.data_processor.df_combined.empty:
+            # Llama a la función de renombrado solo si hay columnas seleccionadas
+            if not hasattr(self, 'selected_columns') or not self.selected_columns:
+                QMessageBox.critical(self, "Error", "No se han seleccionado columnas para renombrar.")
+                return
+
+            renamed_columns = self.rename_columns_dialog(self.data_processor.df_combined, self)
+            if renamed_columns:
+                try:
+                    # Renombrar las columnas usando los nuevos nombres
+                    new_column_names = [renamed_columns[col] for col in self.data_processor.df_combined.columns]
+                    self.data_processor.rename_columns(new_column_names)
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Error al renombrar columnas: {e}")
+                    return
+
+            # Guardar el archivo combinado
             output_file, _ = QFileDialog.getSaveFileName(self, "Guardar archivo combinado", "", "Excel files (*.xlsx)")
             if output_file:
                 self.data_processor.save_combined_file(output_file)

@@ -4,7 +4,7 @@ from ui.menu.menu import configure_menu
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Aplicación con Menú")
+        self.setWindowTitle("Gestor de Archivos - Compras")
         self.setGeometry(100, 100, 800, 600)
 
         # Crear el área MDI
