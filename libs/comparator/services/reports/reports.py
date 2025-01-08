@@ -24,7 +24,7 @@ def make_report(data_frame_array, provider_name, update_ui_callback):
     setup_cost_report = [
         (costs_df, 'Comparacion de Costos')
     ]
-    report = export_file_to_excel(setup_report, f'reporte_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx')
-    cost_report = export_file_to_excel(setup_cost_report, f"reporte_costos_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx")
+    report = export_file_to_excel(setup_report, 'reportes/', f'reporte_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx')
+    cost_report = export_file_to_excel(setup_cost_report, 'reportes/', f"reporte_costos_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx")
     format_costs_excel(cost_report)
     update_ui_callback(8)

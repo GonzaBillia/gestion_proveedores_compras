@@ -115,12 +115,14 @@ def export_file(dataframe, filename, file_format='excel', sheet_name='Sheet1'):
 
     print(f"Archivo exportado: {full_filename}")
 
-import pandas as pd
+def export_file_to_excel(dataframes_with_names, rel_path, filename):    
+    # Definir el path usando ~ para el directorio de usuario
+    relative_path = '~/Documents/Gestor_compras/files/'
+    path = os.path.expanduser(relative_path)  # Expandir el path completo
 
-def export_file_to_excel(dataframes_with_names, filename):
-    path = 'C:\\Users\\Administrador\\Documents\\Gonzalo\\archivos\\lista proveedores\\comparados\\'
-
-    full_path = path + filename
+    # Crear los directorios si no existen
+    os.makedirs(path + rel_path, exist_ok=True)
+    full_path = path + rel_path + filename
     """
     Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
 

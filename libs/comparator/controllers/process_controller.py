@@ -57,9 +57,9 @@ def make_comparation(provider_path, provider_name, update_ui_callback):
     ]
 
     # Guardado de archivos
-    export_file_to_excel(result, f'resultados_{provider_name}.xlsx')
-    export_file_to_excel(matches_p_with_names, f'matches_quantio_{provider_name}.xlsx')
-    export_file_to_excel(cost_df_w_names, f"comparacion_costos_{provider_name}.xlsx")
+    export_file_to_excel(result, 'raw/', f'resultados_{provider_name}.xlsx')
+    export_file_to_excel(matches_p_with_names, 'raw/', f'matches_quantio_{provider_name}.xlsx')
+    export_file_to_excel(cost_df_w_names, 'raw/', f"comparacion_costos_{provider_name}.xlsx")
     update_ui_callback(4)
 
     return unmatched, matches_p, unmatched_cb, cost_df, provider_list
@@ -70,7 +70,7 @@ def make_provider_comparation(provider_match, provider_list, provider_name, upda
     result = compare_by_provider(provider_match, provider_list)
     update_ui_callback(5)
 
-    export_file_to_excel(result, f'resultado_por_proveedor_{provider_name}.xlsx')
+    export_file_to_excel(result, 'raw/', f'resultado_por_proveedor_{provider_name}.xlsx')
     update_ui_callback(6)
 
     return result[1][0]
