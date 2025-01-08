@@ -14,11 +14,11 @@ class WorkerThread(QThread):
         try:
             unmatched, matches_p, unmatched_cb, cost_df, provider_list = make_comparation(self.provider_df, self.provider_name, self.emit_update_ui_signal)
 
-            quantio_matches_df = make_provider_comparation(matches_p, self.provider_name)
+            quantio_matches_df = make_provider_comparation(matches_p, provider_list, self.provider_name, self.emit_update_ui_signal)
 
-            df_array = setup_report(unmatched, quantio_matches_df, unmatched_cb)
+            df_array = setup_report(unmatched, quantio_matches_df, unmatched_cb, cost_df)
 
-            make_report(df_array)
+            make_report(df_array, self.provider_name, self.emit_update_ui_signal)
         except Exception as e:
             print(f"Error en WorkerThread: {e}")
         self.all_tasks_completed.emit()  # Notificar que todas las tareas se completaron

@@ -4,7 +4,7 @@ from libs.comparator.services.reports.data_frames.barcode_report import format_c
 from libs.comparator.services.reports.data_frames.provider_report import format_provider_report
 from libs.comparator.controllers.file_controller import export_file_to_excel, format_costs_excel
 
-def make_report(data_frame_array, provider_name):
+def make_report(data_frame_array, provider_name, update_ui_callback):
     missing_df = data_frame_array[0]
     provider_df = data_frame_array[1]
     codebar_df = data_frame_array[2]
@@ -13,6 +13,7 @@ def make_report(data_frame_array, provider_name):
     missing_report = format_missing_report(missing_df)
     codebar_report = format_codebar_report(codebar_df)
     provider_report = format_provider_report(provider_df)
+    update_ui_callback(7)
 
     setup_report = [
         (missing_report, 'Posibles Incorporaciones'),
@@ -25,5 +26,5 @@ def make_report(data_frame_array, provider_name):
     ]
     report = export_file_to_excel(setup_report, f'reporte_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx')
     cost_report = export_file_to_excel(setup_cost_report, f"reporte_costos_{provider_name}_{datetime.today().strftime('%Y-%m-%d')}.xlsx")
-    
     format_costs_excel(cost_report)
+    update_ui_callback(8)

@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QMessageBox, QProgressBar, QHBoxLayout, QWidget, QInputDialog
 )
 from libs.comparator.ui.threads.worker_thread import WorkerThread
+from libs.comparator.ui.components.spinner import Spinner
 
 class ListComparator(QMainWindow):
     def __init__(self):
@@ -24,7 +25,11 @@ class ListComparator(QMainWindow):
             "Limpiando resultados",
             "Comparando con lista recibida",
             "Ordenando lista de Productos",
-            "Guardando Archivos Procesados"
+            "Guardando Archivos Procesados",
+            "Comparando por Proveedor",
+            "Guardando Resultado",
+            "Generando Reportes",
+            "Guardando Archivos"
         ]
         self.task_widgets = []
         self.worker_thread = None
@@ -46,19 +51,23 @@ class ListComparator(QMainWindow):
             task_widget = QWidget()
             task_layout = QHBoxLayout(task_widget)
 
-            # Añadir margen vertical
-            task_layout.setContentsMargins(0, 10, 0, 10)
+            # Reducir los márgenes
+            task_layout.setContentsMargins(0, 5, 0, 5)  # Márgenes más pequeños
+            task_layout.setSpacing(5)
 
             # Tarea
             task_label = QLabel(task_name, self)
+            task_label.setStyleSheet("font-size: 14px;")  # Ajustar tamaño de fuente
             task_layout.addWidget(task_label)
 
             # Spinner
-            spinner = QLabel(self)
-            movie = QMovie(r"C:\\Users\\Administrador\\Documents\\Gonzalo\\python_apps\\gestion_proveedores_compras\\assets\\icons8-hilandero.gif")
-            spinner.setMovie(movie)
+            spinner = Spinner()
+            spinner.setFixedSize(20, 20)  # Ajustar tamaño del spinner
             spinner.hide()  # Ocultar inicialmente
             task_layout.addWidget(spinner)
+
+            # Alinear los widgets en el centro
+            task_layout.setAlignment(Qt.AlignVCenter)
 
             self.task_widgets.append((task_label, spinner))
             self.task_layout.addWidget(task_widget)
@@ -76,14 +85,14 @@ class ListComparator(QMainWindow):
         self.layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
 
     def load_and_start_tasks(self):
-        file_path, provider_name = self.pedir_ubicacion_archivo()
+        file_path, nombre_proveedor = self.pedir_ubicacion_archivo()
         if not file_path:
             QMessageBox.warning(self, "Advertencia", "No se seleccionó ningún archivo.")
             return
 
         # Deshabilitar el botón y mostrar progreso
         self.start_button.setDisabled(True)
-        self.start_tasks(file_path, provider_name)
+        self.start_tasks(file_path, nombre_proveedor)
 
     def start_tasks(self, provider_df_path, provider_name):
         # Configurar el hilo de trabajo
@@ -102,15 +111,18 @@ class ListComparator(QMainWindow):
             # Actualizar spinner y barra de progreso
             task_label, spinner = self.task_widgets[task_index]
             spinner.show()
-            spinner.movie().start()
             self.progress_bar.setValue(task_index + 1)
 
             # Ocultar spinner de la tarea previa
             if task_index > 0:
                 prev_task_label, prev_spinner = self.task_widgets[task_index - 1]
                 prev_spinner.hide()
+                prev_task_label.setDisabled(True)
 
-    def complete_all_tasks(self):
+    def complete_all_tasks(self, task_index):
+        task_label, spinner = self.task_widgets[task_index]
+        task_label.setDisabled(True)
+        spinner.hide()
         QMessageBox.information(self, "Completado", "Todas las tareas han finalizado.")
 
     def pedir_ubicacion_archivo(self):
@@ -133,4 +145,4 @@ class ListComparator(QMainWindow):
 
 
         # Retornar ambos valores
-        return nombre_proveedor, file_path if file_path else None
+        return file_path, nombre_proveedor
