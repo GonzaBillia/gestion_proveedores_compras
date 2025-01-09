@@ -1,14 +1,54 @@
+import os
+import json
 import pandas as pd
-
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 class FileController:
-    def __init__(self):
+    def __init__(self, data_processor, directories_file):
         """
         Inicializa el gestor de archivos.
         """
+        self.data_processor = data_processor
+        self.directories_file = directories_file
+        self.preferences = self.load_preferences()
         self.file_names = []  # Lista de rutas de archivos cargados
         self.sheet_selection = {}  # Diccionario con la selección de hojas por archivo
         self._current_index = 0  # Índice para iterar sobre los archivos cargados
+
+    def load_preferences(self):
+        """
+        Carga las preferencias desde el archivo JSON.
+        :return: Un diccionario con las preferencias.
+        """
+        if os.path.exists(self.directories_file):
+            with open(self.directories_file, "r") as file:
+                preferences = json.load(file)
+            return preferences
+        return {}
+
+    def save_combined_file(self):
+        """
+        Guarda el archivo combinado en la ubicación especificada o según las preferencias del usuario.
+        """
+        try:
+            # Obtener la ruta de preferencia desde las configuraciones del usuario
+            preferred_path = self.preferences.get("save_path", None)
+            ask_where_to_save = self.preferences.get("ask_where_to_save", True)
+
+            if ask_where_to_save or not preferred_path:
+                # Si la preferencia es preguntar o no hay una ruta de preferencia, abrir diálogo
+                output_file, _ = QFileDialog.getSaveFileName(None, "Guardar archivo combinado", "", "Excel files (*.xlsx)")
+            else:
+                # Si hay una ruta de preferencia configurada, usarla
+                output_file = os.path.join(preferred_path, "archivo_combinado.xlsx")
+
+            if output_file:
+                self.data_processor.save_combined_file(output_file)
+                QMessageBox.information(None, "Éxito", f"Archivo combinado guardado en: {output_file}")
+            else:
+                QMessageBox.warning(None, "Advertencia", "No se seleccionó ninguna ubicación para guardar el archivo.")
+        except Exception as e:
+            QMessageBox.critical(None, "Error", f"Error al guardar el archivo: {e}")
 
     def load_files(self, file_paths):
         """
@@ -117,6 +157,3 @@ class FileController:
                 yield file, sheet
             self._current_index += 1
         raise StopIteration("No quedan más archivos para procesar.")
-
-
-

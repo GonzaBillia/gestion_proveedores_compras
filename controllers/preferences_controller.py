@@ -35,19 +35,52 @@ class PreferencesController:
 
     def _ensure_preferences_file(self):
         """
-        Crea el archivo de preferencias si no existe.
+        Crea el archivo de preferencias si no existe o lo actualiza si el formato es incorrecto.
         """
         if not os.path.exists(self.directories_file):
-            default_preferences = {
-                "directories": {
-                    "normalized_file_dir": os.path.join(self.base_path, "files", "normalizados"),
-                    "comparator_processed_file_dir": os.path.join(self.base_path, "files", "comparados"),
-                    "reports_dir": os.path.join(self.base_path, "files", "reportes")
+            default_preferences = self._get_default_preferences()
+            self.save_preferences(default_preferences)
+            print(f"Archivo de preferencias creado: {self.directories_file}")
+        else:
+            self._update_preferences_format()
+
+    def _get_default_preferences(self):
+        """
+        Retorna un diccionario con las preferencias por defecto.
+        """
+        return {
+            "directories": {
+                "normalized_file_dir": {
+                    "path": os.path.join(self.base_path, "files", "normalizados"),
+                    "ask": False
+                },
+                "comparator_processed_file_dir": {
+                    "path": os.path.join(self.base_path, "files", "comparados"),
+                    "ask": False
+                },
+                "reports_dir": {
+                    "path": os.path.join(self.base_path, "files", "reportes"),
+                    "ask": False
                 }
             }
-            with open(self.directories_file, "w") as file:
-                json.dump(default_preferences, file, indent=4)
-            print(f"Archivo de preferencias creado: {self.directories_file}")
+        }
+
+    def _update_preferences_format(self):
+        """
+        Actualiza el formato del archivo JSON si detecta un formato antiguo (string en lugar de diccionario).
+        """
+        preferences = self.load_preferences()
+        directories = preferences.get("directories", {})
+
+        updated = False
+        for key, value in directories.items():
+            if isinstance(value, str):
+                directories[key] = {"path": value, "ask": False}
+                updated = True
+
+        if updated:
+            self.save_preferences(preferences)
+            print(f"Formato del archivo de preferencias actualizado: {self.directories_file}")
 
     def load_preferences(self):
         """

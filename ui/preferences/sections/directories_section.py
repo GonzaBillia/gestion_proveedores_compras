@@ -50,31 +50,50 @@ class DirectoriesSection(QWidget):
 
     def load_data(self):
         """
-        Carga los valores desde el archivo JSON y los muestra en los inputs de ambos acordeones.
+        Carga los valores desde el archivo JSON y los muestra en los inputs y checkboxes de ambos acordeones.
         """
         preferences = self.controller.load_preferences()
         directories = preferences.get("directories", {})
 
-        for key, input_field in self.accordion_normalizador.inputs.items():
-            input_field.setText(directories.get(key, ""))
+        # Validar si el valor de cada clave es un string (formato antiguo) y convertirlo
+        for key in list(directories.keys()):
+            if isinstance(directories[key], str):
+                directories[key] = {"path": directories[key], "ask": False}
 
-        for key, input_field in self.accordion_comparador.inputs.items():
-            input_field.setText(directories.get(key, ""))
+        # Cargar datos en el acordeón Normalizador
+        for key, widgets in self.accordion_normalizador.inputs.items():
+            if key in directories:
+                widgets["input"].setText(directories[key].get("path", ""))
+                widgets["checkbox"].setChecked(directories[key].get("ask", False))
+
+        # Cargar datos en el acordeón Comparador
+        for key, widgets in self.accordion_comparador.inputs.items():
+            if key in directories:
+                widgets["input"].setText(directories[key].get("path", ""))
+                widgets["checkbox"].setChecked(directories[key].get("ask", False))
+
 
     def collect_data(self):
         """
-        Recolecta los datos de los inputs de ambos acordeones y los retorna como un diccionario.
+        Recolecta los datos de los inputs y checkboxes de ambos acordeones y los retorna como un diccionario.
         """
         data = {
             "directories": {}
         }
 
         # Recolectar datos del acordeón Normalizador
-        for key, input_field in self.accordion_normalizador.inputs.items():
-            data["directories"][key] = input_field.text()
+        for key, widgets in self.accordion_normalizador.inputs.items():
+            data["directories"][key] = {
+                "path": widgets["input"].text(),
+                "ask": widgets["checkbox"].isChecked()
+            }
 
         # Recolectar datos del acordeón Comparador
-        for key, input_field in self.accordion_comparador.inputs.items():
-            data["directories"][key] = input_field.text()
+        for key, widgets in self.accordion_comparador.inputs.items():
+            data["directories"][key] = {
+                "path": widgets["input"].text(),
+                "ask": widgets["checkbox"].isChecked()
+            }
 
         return data
+
