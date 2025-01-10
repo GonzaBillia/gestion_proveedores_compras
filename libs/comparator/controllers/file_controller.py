@@ -5,6 +5,10 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.utils import get_column_letter
+from controllers.preferences_controller import PreferencesController
+
+preferences_controller = PreferencesController()
+preferences = preferences_controller.load_preferences()
 
 def setup_logger():
     """Setup logger for the file controller."""
@@ -51,6 +55,8 @@ def save_file():
         return None
 
 def read_file(file_path):
+    # Obtener solo el nombre del archivo
+    file_name = os.path.basename(file_path)
     """Read a file and return its content as a DataFrame if applicable."""
     try:
         if not os.path.exists(file_path):
@@ -59,17 +65,17 @@ def read_file(file_path):
         file_extension = os.path.splitext(file_path)[1].lower()
         if file_extension == ".csv":
             df = pd.read_csv(file_path)
-            logging.info(f"CSV file read successfully: {file_path}")
-            return df
+            logging.info(f"CSV file read successfully: {file_name}")
+            return df, file_name
         elif file_extension == ".xlsx":
             df = pd.read_excel(file_path)
-            logging.info(f"Excel file read successfully: {file_path}")
-            return df
+            logging.info(f"Excel file read successfully: {file_name}")
+            return df, file_name
         else:
             with open(file_path, 'r') as file:
                 content = file.read()
-            logging.info(f"Text file read successfully: {file_path}")
-            return content
+            logging.info(f"Text file read successfully: {file_name}")
+            return content, file_name
     except FileNotFoundError as e:
         logging.error(f"Error reading file: {e}")
         return None
@@ -115,14 +121,66 @@ def export_file(dataframe, filename, file_format='excel', sheet_name='Sheet1'):
 
     print(f"Archivo exportado: {full_filename}")
 
-def export_file_to_excel(dataframes_with_names, rel_path, filename):    
-    # Definir el path usando ~ para el directorio de usuario
-    relative_path = '~/Documents/Gestor_compras/files/'
-    path = os.path.expanduser(relative_path)  # Expandir el path completo
+def get_preference_path(directory_key):
+        """
+        Obtiene la ruta de preferencia y si debe preguntar dónde guardar.
+        :param directory_key: Clave del directorio en las preferencias.
+        :return: Tuple con la ruta y el booleano de preguntar.
+        """
+        directory = preferences.get("directories", {}).get(directory_key, {})
+        path = directory.get("path", None)
+        ask = directory.get("ask", True)
+        return path, ask
 
-    # Crear los directorios si no existen
-    os.makedirs(path + rel_path, exist_ok=True)
-    full_path = path + rel_path + filename
+
+def export_file_to_excel(dataframes_with_names, directory_key, req_filename_callback, req_path_callback):    
+    # Definir el path usando ~ para el directorio de usuario
+    preferred_path, ask_where_to_save = get_preference_path(directory_key)
+
+    if ask_where_to_save or not preferred_path:
+        # Si la preferencia es preguntar o no hay una ruta de preferencia, abrir diálogo
+        full_path = req_path_callback()
+    else:
+        # Si hay una ruta de preferencia configurada, usarla
+        filename = req_filename_callback()
+        full_path = os.path.join(preferred_path, f"{filename}.xlsx")
+    """
+    Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
+
+    Args:
+        dataframes_with_names (list of tuples): Lista de tuplas donde cada una contiene un DataFrame y el nombre de la hoja.
+            Ejemplo: [(df1, 'Sheet1'), (df2, 'Sheet2')]
+        filename (str): Nombre del archivo Excel a exportar. Ejemplo: 'results.xlsx'.
+    """
+
+    if not dataframes_with_names:
+        print("No se proporcionaron DataFrames para exportar.")
+        return
+
+    # Exportar a Excel
+    with pd.ExcelWriter(full_path, engine='openpyxl') as writer:
+        for dataframe, sheet_name in dataframes_with_names:
+            # Verificar que el DataFrame no esté vacío y sea válido
+            if dataframe is not None and not dataframe.empty:
+                dataframe.to_excel(writer, index=False, sheet_name=sheet_name[:31])  # Limitar el nombre a 31 caracteres
+            else:
+                print(f"El DataFrame asociado a la hoja '{sheet_name}' está vacío o no existe.")
+
+    # Cargar el archivo con openpyxl para aplicar estilos
+    workbook = load_workbook(full_path)
+    for sheet_name in workbook.sheetnames:
+        sheet = workbook[sheet_name]
+        apply_styles_to_sheet(sheet)
+    workbook.save(full_path)
+
+    print(f"Archivo exportado exitosamente: {filename}")
+
+    return full_path
+
+def export_file_without_ask(dataframes_with_names, name, type):    
+    # Definir el path usando ~ para el directorio de usuario
+    filename = f"{name}_{type}.xlsx"
+    full_path = f"C:/Users/Administrador/Documents/Gestor_compras/files/comparados/{filename}"
     """
     Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
 

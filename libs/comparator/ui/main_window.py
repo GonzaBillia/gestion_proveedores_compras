@@ -34,6 +34,7 @@ class ListComparator(QMainWindow):
         self.task_widgets = []
         self.worker_thread = None
 
+
         # Crear widgets
         self.create_widgets()
 
@@ -85,20 +86,24 @@ class ListComparator(QMainWindow):
         self.layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
 
     def load_and_start_tasks(self):
-        file_path, nombre_proveedor = self.pedir_ubicacion_archivo()
+        file_path = self.pedir_ubicacion_archivo()
         if not file_path:
             QMessageBox.warning(self, "Advertencia", "No se seleccionó ningún archivo.")
             return
 
         # Deshabilitar el botón y mostrar progreso
         self.start_button.setDisabled(True)
-        self.start_tasks(file_path, nombre_proveedor)
+        self.start_tasks(file_path)
 
-    def start_tasks(self, provider_df_path, provider_name):
+    def start_tasks(self, provider_df_path):
         # Configurar el hilo de trabajo
         self.worker_thread = WorkerThread()
+        # Conectar señales
+        self.worker_thread.request_filename.connect(self.show_filename_dialog)
+        self.worker_thread.filename_provided.connect(self.worker_thread.set_filename)
+        self.worker_thread.request_save_file_path.connect(self.show_save_file_dialog)
+        self.worker_thread.file_path_provided.connect(self.worker_thread.set_file_path)
         self.worker_thread.provider_df = provider_df_path
-        self.worker_thread.provider_name = provider_name
         self.worker_thread.task_completed.connect(self.update_task_ui)
         self.worker_thread.all_tasks_completed.connect(self.complete_all_tasks)
         self.worker_thread.start()
@@ -136,13 +141,23 @@ class ListComparator(QMainWindow):
             "Archivos soportados (*.xlsx *.csv *.pdf *.txt);;Archivos de Excel (*.xlsx);;Archivos CSV (*.csv);;Archivos PDF (*.pdf);;Archivos de texto (*.txt)",
             options=options,
         )
-        # Pedir el nombre del proveedor
-        nombre_proveedor, ok = QInputDialog.getText(self, "Nombre del Proveedor", "Ingrese el nombre del proveedor:")
-        
-        if not ok or not nombre_proveedor:
-            QMessageBox.warning(self, "Advertencia", "No se ingresó ningún nombre de proveedor.")
-            return None, None
-
 
         # Retornar ambos valores
-        return file_path, nombre_proveedor
+        return file_path
+
+    def show_filename_dialog(self, type):
+        filename, ok = QInputDialog.getText(None, "Guardar archivo", f"Ingrese el nombre del archivo {type}:")
+        if filename and ok:
+            self.worker_thread.filename_provided.emit(filename)
+        else:
+            self.worker_thread.filename_provided.emit("")
+    
+    def show_save_file_dialog(self):
+        """
+        Muestra un cuadro de diálogo para que el usuario seleccione la ruta del archivo.
+        """
+        full_path, _ = QFileDialog.getSaveFileName(self, f"Guardar archivo", "", "Excel files (*.xlsx)")
+        if full_path:
+            self.worker_thread.file_path_provided.emit(full_path)
+        else:
+            self.worker_thread.file_path_provided.emit("")

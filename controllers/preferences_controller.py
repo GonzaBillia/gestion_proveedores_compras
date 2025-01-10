@@ -11,6 +11,8 @@ class PreferencesController:
         self.files_path = os.path.join(self.base_path, "files")
         self.config_path = os.path.join(self.base_path, "config")
         self.directories_file = os.path.join(self.config_path, "directories.json")
+        self.dk_normalized = "normalized_file_dir"
+        self.dk_reports = "reports_dir"
 
         # Crear las carpetas necesarias
         self._ensure_directories_exist()
@@ -24,7 +26,6 @@ class PreferencesController:
             self.base_path,
             self.config_path,
             os.path.join(self.base_path, "files", "normalizados"),
-            os.path.join(self.base_path, "files", "comparados"),
             os.path.join(self.base_path, "files", "reportes"),
         ]
 
@@ -52,10 +53,6 @@ class PreferencesController:
             "directories": {
                 "normalized_file_dir": {
                     "path": os.path.join(self.base_path, "files", "normalizados"),
-                    "ask": False
-                },
-                "comparator_processed_file_dir": {
-                    "path": os.path.join(self.base_path, "files", "comparados"),
                     "ask": False
                 },
                 "reports_dir": {

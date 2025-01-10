@@ -1,12 +1,14 @@
 from libs.comparator.controllers.db_controller import fetch_products_by_barcode, fetch_products_matched
 from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, find_unmatches_barcodes, get_unique_providers
 from libs.comparator.services.compare_algorythms.compare_provider import compare_by_provider
-from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_to_excel
-from libs.comparator.services.reports.reports import make_report
+from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_without_ask
+from controllers.preferences_controller import PreferencesController
 from libs.comparator.services.compare_algorythms.compare_costs import make_cost_comparation
 
+pref_controller = PreferencesController()
+dk_reports = pref_controller.dk_reports
 
-def make_comparation(provider_path, provider_name, update_ui_callback):
+def make_comparation(provider_path, update_ui_callback):
     """
     Función que realiza el proceso de comparación paso a paso.
     Actualiza la UI mediante el callback proporcionado.
@@ -15,7 +17,7 @@ def make_comparation(provider_path, provider_name, update_ui_callback):
     :param update_ui_callback: Función para actualizar la UI.
     :return: unmatched, matches_p, unmatched_cb.
     """
-    provider_df = read_file(provider_path)
+    provider_df, file_name = read_file(provider_path)
     provider_df = normalize_columns(provider_df)
     provider_df = provider_df.drop_duplicates(subset='ean')
     # Tarea 1: Traer productos desde la base de datos
@@ -57,20 +59,20 @@ def make_comparation(provider_path, provider_name, update_ui_callback):
     ]
 
     # Guardado de archivos
-    export_file_to_excel(result, 'raw/', f'resultados_{provider_name}.xlsx')
-    export_file_to_excel(matches_p_with_names, 'raw/', f'matches_quantio_{provider_name}.xlsx')
-    export_file_to_excel(cost_df_w_names, 'raw/', f"comparacion_costos_{provider_name}.xlsx")
+    export_file_without_ask(result, file_name, "coincidencias")
+    export_file_without_ask(matches_p_with_names, file_name, "coincidencias_base")
+    export_file_without_ask(cost_df_w_names, file_name, "costos_base")
     update_ui_callback(4)
 
-    return unmatched, matches_p, unmatched_cb, cost_df, provider_list
+    return unmatched, matches_p, unmatched_cb, cost_df, provider_list, file_name
 
-def make_provider_comparation(provider_match, provider_list, provider_name, update_ui_callback):
+def make_provider_comparation(provider_match, provider_list, update_ui_callback, file_name):
     # Funcion de comparacion por proveedor
 
     result = compare_by_provider(provider_match, provider_list)
     update_ui_callback(5)
 
-    export_file_to_excel(result, 'raw/', f'resultado_por_proveedor_{provider_name}.xlsx')
+    export_file_without_ask(result, file_name, "proveedores")
     update_ui_callback(6)
 
     return result[1][0]
