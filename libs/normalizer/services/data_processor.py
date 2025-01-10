@@ -142,6 +142,8 @@ class DataProcessor:
         """
         try:
             if self.df_combined.empty:
+                print("Error de DataFrame al querer renombrar las columnas")
+                print(self.df_combined)
                 raise ValueError("El DataFrame combinado está vacío.")
             self.df_combined.columns = new_column_names
         except Exception as e:

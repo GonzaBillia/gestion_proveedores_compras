@@ -1,15 +1,17 @@
 import os
 import json
 import pandas as pd
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
+from controllers.preferences_controller import PreferencesController
 
 class FileController:
-    def __init__(self, data_processor, directories_file):
+    def __init__(self, data_processor):
         """
         Inicializa el gestor de archivos.
         """
+        self.preferences_controller = PreferencesController()
         self.data_processor = data_processor
-        self.directories_file = directories_file
+        self.directories_file = self.preferences_controller.directories_file
         self.preferences = self.load_preferences()
         self.file_names = []  # Lista de rutas de archivos cargados
         self.sheet_selection = {}  # Diccionario con la selección de hojas por archivo
@@ -25,22 +27,33 @@ class FileController:
                 preferences = json.load(file)
             return preferences
         return {}
+    
+    def get_preference_path(self, directory_key):
+        """
+        Obtiene la ruta de preferencia y si debe preguntar dónde guardar.
+        :param directory_key: Clave del directorio en las preferencias.
+        :return: Tuple con la ruta y el booleano de preguntar.
+        """
+        directory = self.preferences.get("directories", {}).get(directory_key, {})
+        path = directory.get("path", None)
+        ask = directory.get("ask", True)
+        return path, ask
 
-    def save_combined_file(self):
+    def save_combined_file(self, directory_key):
         """
         Guarda el archivo combinado en la ubicación especificada o según las preferencias del usuario.
+        :param directory_key: Clave del directorio para buscar en las preferencias.
         """
         try:
-            # Obtener la ruta de preferencia desde las configuraciones del usuario
-            preferred_path = self.preferences.get("save_path", None)
-            ask_where_to_save = self.preferences.get("ask_where_to_save", True)
+            preferred_path, ask_where_to_save = self.get_preference_path(directory_key)
 
             if ask_where_to_save or not preferred_path:
                 # Si la preferencia es preguntar o no hay una ruta de preferencia, abrir diálogo
                 output_file, _ = QFileDialog.getSaveFileName(None, "Guardar archivo combinado", "", "Excel files (*.xlsx)")
             else:
                 # Si hay una ruta de preferencia configurada, usarla
-                output_file = os.path.join(preferred_path, "archivo_combinado.xlsx")
+                filename = self.ask_filename_dialog()
+                output_file = os.path.join(preferred_path, f"{filename}.xlsx")
 
             if output_file:
                 self.data_processor.save_combined_file(output_file)
@@ -49,6 +62,7 @@ class FileController:
                 QMessageBox.warning(None, "Advertencia", "No se seleccionó ninguna ubicación para guardar el archivo.")
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Error al guardar el archivo: {e}")
+
 
     def load_files(self, file_paths):
         """
@@ -157,3 +171,13 @@ class FileController:
                 yield file, sheet
             self._current_index += 1
         raise StopIteration("No quedan más archivos para procesar.")
+    
+    def ask_filename_dialog(self):
+        """
+        Muestra un cuadro de diálogo para pedir al usuario el nombre del archivo.
+        :return: El nombre del archivo como una cadena de texto.
+        """
+        filename, ok = QInputDialog.getText(None, "Guardar archivo", "Ingrese el nombre del archivo:")
+        if ok and filename:
+            return filename
+        return None

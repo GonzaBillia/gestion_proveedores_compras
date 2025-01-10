@@ -16,12 +16,13 @@ class ExcelProcessorApp(QMainWindow):
         self.setGeometry(100, 100, 600, 300)
 
         # Instances of separated logic
-        self.file_manager = FileController()
         self.data_processor = DataProcessor()
+        self.file_manager = FileController(self.data_processor)
 
         # Variables
         self.process_by_sheets = True
         self.header_line = 1
+        self.directoy_key = "normalized_file_dir"
 
         # Opciones predefinidas para renombrar las columnas
         self.options = ["EAN", "DESCRIPCION", "PRECIO_COSTO", "IVA", "PRECIO_IVA", "DESCUENTO"]
@@ -194,6 +195,8 @@ class ExcelProcessorApp(QMainWindow):
         reference_button.clicked.connect(self.upload_reference_file)
         layout.addWidget(reference_button)
 
+        final_dialog.close()
+
         final_dialog.exec_()
     
     def rename_columns_dialog(self, dataframe):
@@ -294,14 +297,8 @@ class ExcelProcessorApp(QMainWindow):
                 QMessageBox.critical(self, "Error", f"Error al ordenar columnas: {e}")
                 return
 
-            # Guardar el archivo combinado
-            output_file, _ = QFileDialog.getSaveFileName(self, "Guardar archivo combinado", "", "Excel files (*.xlsx)")
-            if output_file:
-                try:
-                    self.data_processor.save_combined_file(output_file)
-                    QMessageBox.information(self, "Éxito", f"Archivo combinado guardado en: {output_file}")
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Error al guardar el archivo: {e}")
+            self.file_manager.save_combined_file(self.directoy_key)
+
         else:
             QMessageBox.critical(self, "Error", "No hay datos para combinar.")
 
