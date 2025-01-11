@@ -22,12 +22,12 @@ def make_comparation(provider_path, update_ui_callback):
     provider_df = provider_df.drop_duplicates(subset='ean')
     # Tarea 1: Traer productos desde la base de datos
     db_df = fetch_products_by_barcode()
-    update_ui_callback(0)  # Actualizar la UI después de la tarea
+    update_ui_callback(0, 0)  # Actualizar la UI después de la tarea
 
     # Tarea 2: Normalizar y limpiar datos
     db_df = normalize_columns(db_df)
     db_df = db_df.drop_duplicates(subset='ean')
-    update_ui_callback(1)
+    update_ui_callback(0, 1)
 
     # Tarea 3: Comparar con la lista recibida
     result = compare_by_barcode(provider_df, db_df)
@@ -36,7 +36,7 @@ def make_comparation(provider_path, update_ui_callback):
 
     # Obtener IDs para la segunda consulta
     array_productos = matches["idproducto"].tolist()
-    update_ui_callback(2)
+    update_ui_callback(0, 2)
 
     # Tarea 4: Ordenar lista de productos
     matches_p = fetch_products_matched(array_productos)
@@ -45,7 +45,7 @@ def make_comparation(provider_path, update_ui_callback):
 
     provider_datalist, provider_list = get_unique_providers(matches_p)
 
-    update_ui_callback(3)
+    update_ui_callback(0, 3)
 
     matches_p_with_names = [
         (matches_p, 'Coincidencias'),
@@ -62,7 +62,7 @@ def make_comparation(provider_path, update_ui_callback):
     export_file_without_ask(result, file_name, "coincidencias")
     export_file_without_ask(matches_p_with_names, file_name, "coincidencias_base")
     export_file_without_ask(cost_df_w_names, file_name, "costos_base")
-    update_ui_callback(4)
+    update_ui_callback(0, 4)
 
     return unmatched, matches_p, unmatched_cb, cost_df, provider_list, file_name
 
@@ -70,10 +70,10 @@ def make_provider_comparation(provider_match, provider_list, update_ui_callback,
     # Funcion de comparacion por proveedor
 
     result = compare_by_provider(provider_match, provider_list)
-    update_ui_callback(5)
+    update_ui_callback(0, 5)
 
     export_file_without_ask(result, file_name, "proveedores")
-    update_ui_callback(6)
+    update_ui_callback(0, 6)
 
     return result[1][0]
 

@@ -1,8 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMovie
+from functools import partial
 from PyQt5.QtWidgets import (
     QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
-    QMessageBox, QProgressBar, QHBoxLayout, QWidget, QInputDialog
+    QMessageBox, QProgressBar, QHBoxLayout, QWidget, QInputDialog, QSizePolicy, QSpacerItem
 )
 from libs.comparator.ui.threads.worker_thread import WorkerThread
 from libs.comparator.ui.components.spinner import Spinner
@@ -18,20 +19,30 @@ class ListComparator(QMainWindow):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
+        self.layout.setAlignment(Qt.AlignTop)
 
         # Variables
-        self.tasks = [
-            "Traer Productos desde la Base de Datos",
-            "Limpiando resultados",
-            "Comparando con lista recibida",
-            "Ordenando lista de Productos",
-            "Guardando Archivos Procesados",
-            "Comparando por Proveedor",
-            "Guardando Resultado",
-            "Generando Reportes",
-            "Guardando Archivos"
-        ]
+        self.tasks = {
+            "Comparando Datos": [
+                "Traer Productos desde la Base de Datos",
+                "Limpiando resultados",
+                "Comparando con lista recibida",
+                "Ordenando lista de Productos",
+                "Guardando Archivos Procesados",
+                "Comparando por Proveedor",
+                "Guardando Resultados",
+                "Proceso Completado"
+            ],
+            "Generando Reportes": [
+                "Ordenando Reportes",
+                "Guardando Archivos",
+                "Proceso Completado"
+            ]
+        }
+
         self.task_widgets = []
+        self.current_task_index = 0
+        self.current_subtask_index = 0
         self.worker_thread = None
 
 
@@ -40,50 +51,93 @@ class ListComparator(QMainWindow):
 
     def create_widgets(self):
         # Título
-        self.label = QLabel("Progreso de Tareas", self)
+        self.label = QLabel("Proceso de Comparación y Reporting", self)
+        self.label.setStyleSheet("font-size: 14px; font-weight: bold; margin: 5px 0px;")
         self.label.setAlignment(Qt.AlignHCenter)
+        self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.layout.addWidget(self.label)
 
-        # Contenedor de tareas
-        self.task_layout = QVBoxLayout()
-        self.layout.addLayout(self.task_layout)
-
-        for task_name in self.tasks:
-            task_widget = QWidget()
-            task_layout = QHBoxLayout(task_widget)
-
-            # Reducir los márgenes
-            task_layout.setContentsMargins(0, 5, 0, 5)  # Márgenes más pequeños
-            task_layout.setSpacing(5)
-
-            # Tarea
-            task_label = QLabel(task_name, self)
-            task_label.setStyleSheet("font-size: 14px;")  # Ajustar tamaño de fuente
-            task_layout.addWidget(task_label)
-
-            # Spinner
-            spinner = Spinner()
-            spinner.setFixedSize(20, 20)  # Ajustar tamaño del spinner
-            spinner.hide()  # Ocultar inicialmente
-            task_layout.addWidget(spinner)
-
-            # Alinear los widgets en el centro
-            task_layout.setAlignment(Qt.AlignVCenter)
-
-            self.task_widgets.append((task_label, spinner))
-            self.task_layout.addWidget(task_widget)
+        # Ajustar los márgenes del layout
+        self.layout.setContentsMargins(10, 5, 10, 5)
+        self.layout.setSpacing(20)
 
         # Barra de progreso
         self.progress_bar = QProgressBar(self)
+        self.progress_bar.setAlignment(Qt.AlignTop)
         self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(len(self.tasks))
+        self.progress_bar.setMaximum(self.get_total_subtasks())
         self.progress_bar.setValue(0)
-        self.layout.addWidget(self.progress_bar)
+        progress_layout = QVBoxLayout()
+        progress_layout.addWidget(self.progress_bar)
+        progress_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+        self.layout.addLayout(progress_layout)
+
+        # Contenedor de tareas
+        self.task_layout = QVBoxLayout()
+        self.task_layout.setContentsMargins(0, 5, 0, 5)  # Ajustar márgenes
+        self.task_layout.setSpacing(20)  # Ajustar espaciado
+        self.layout.addLayout(self.task_layout)
+
+        for task_name, subtasks in self.tasks.items():
+            spinner = Spinner()
+            spinner.setFixedSize(20, 20)
+            spinner.hide()
+
+            # Título de la tarea principal
+            task_label = QLabel(task_name, self)
+            task_label.setStyleSheet("font-size: 12px; font-weight: bold; margin: 10px 0 5px 0; width: auto;")
+            task_label.setAlignment(Qt.AlignLeft)
+            task_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+            # Spinner
+            spinner = Spinner()
+            spinner.setFixedSize(20, 20)
+            spinner.hide()
+
+            # Layout del título y spinner
+            task_widget = QWidget()
+            task_layout = QHBoxLayout(task_widget)
+            task_layout.setContentsMargins(0, 0, 0, 0)
+            task_layout.setSpacing(10)
+            task_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+
+            task_layout.addWidget(task_label)
+            task_layout.addWidget(spinner)
+
+            task_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            self.task_layout.addWidget(task_widget)
+
+            # Contenedor para la subtarea actual
+            subtask_widget = QWidget()
+            subtask_layout = QHBoxLayout(subtask_widget)
+            subtask_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+
+            # Label de la subtarea
+            subtask_label = QLabel("", self)
+            subtask_label.setStyleSheet("font-size: 11px; margin-left: 15px;")
+            subtask_layout.addWidget(subtask_label)
+
+            subtask_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            subtask_layout.setContentsMargins(15, 2, 0, 2)  # Reduce los márgenes de la subtask
+            subtask_layout.setSpacing(5)  # Espaciado más pequeño entre elementos de la subtask
+            subtask_widget.hide()  # Ocultar inicialmente
+
+            self.task_widgets.append((task_label, subtask_label, spinner, subtask_widget, subtasks))
+            self.task_layout.addWidget(subtask_widget)
+
+        # Espaciador flexible para mantener los widgets alineados arriba
+        spacer = QSpacerItem(20, 30, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.layout.addItem(spacer)
 
         # Botón para seleccionar archivo
         self.start_button = QPushButton("Seleccionar Archivo y Procesar", self)
+        self.start_button.setFixedHeight(30)
+        self.start_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.start_button.clicked.connect(self.load_and_start_tasks)
-        self.layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
+        self.layout.addWidget(self.start_button, alignment=Qt.AlignBottom)
+
+    def get_total_subtasks(self):
+        return sum(len(subtasks) for subtasks in self.tasks.values())
 
     def load_and_start_tasks(self):
         file_path = self.pedir_ubicacion_archivo()
@@ -104,31 +158,42 @@ class ListComparator(QMainWindow):
         self.worker_thread.request_save_file_path.connect(self.show_save_file_dialog)
         self.worker_thread.file_path_provided.connect(self.worker_thread.set_file_path)
         self.worker_thread.provider_df = provider_df_path
-        self.worker_thread.task_completed.connect(self.update_task_ui)
+        self.worker_thread.task_completed.connect(partial(self.update_task_ui))
         self.worker_thread.all_tasks_completed.connect(self.complete_all_tasks)
         self.worker_thread.start()
 
         # Iniciar la primera tarea
-        self.update_task_ui(0)
+        self.update_task_ui(0, 0)
 
-    def update_task_ui(self, task_index):
+    def update_task_ui(self, task_index, subtask_index):
         if task_index < len(self.task_widgets):
-            # Actualizar spinner y barra de progreso
-            task_label, spinner = self.task_widgets[task_index]
-            spinner.show()
-            self.progress_bar.setValue(task_index + 1)
+            task_label, subtask_label, spinner, subtask_widget, subtasks = self.task_widgets[task_index]
 
-            # Ocultar spinner de la tarea previa
-            if task_index > 0:
-                prev_task_label, prev_spinner = self.task_widgets[task_index - 1]
-                prev_spinner.hide()
-                prev_task_label.setDisabled(True)
+            # Mostrar la subtarea actual
+            subtask_label.setText(subtasks[subtask_index])
+            subtask_widget.show()
+            
+            # Mostrar el spinner solo en el título de la tarea
+            if subtask_index == 0:
+                spinner.show()
 
-    def complete_all_tasks(self, task_index):
-        task_label, spinner = self.task_widgets[task_index]
-        task_label.setDisabled(True)
-        spinner.hide()
+            # Actualizar barra de progreso
+            total_subtasks = self.get_total_subtasks()
+            completed_subtasks = sum(len(self.tasks[task]) for task in list(self.tasks.keys())[:task_index]) + subtask_index + 1
+            self.progress_bar.setValue(completed_subtasks)
+
+            # Avanzar al siguiente subtask o task
+            self.current_subtask_index = subtask_index + 1
+            if self.current_subtask_index >= len(subtasks):
+                spinner.hide()
+                self.current_subtask_index = 0
+                self.current_task_index += 1
+                if self.current_task_index < len(self.task_widgets):
+                    self.update_task_ui(self.current_task_index, 0)
+
+    def complete_all_tasks(self):
         QMessageBox.information(self, "Completado", "Todas las tareas han finalizado.")
+        self.start_button.setDisabled(False)
 
     def pedir_ubicacion_archivo(self):
         # Abrir el diálogo para seleccionar el archivo

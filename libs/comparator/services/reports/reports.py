@@ -16,7 +16,7 @@ def make_report(data_frame_array, update_ui_callback, req_filename_reporte, req_
     missing_report = format_missing_report(missing_df)
     codebar_report = format_codebar_report(codebar_df)
     provider_report = format_provider_report(provider_df)
-    update_ui_callback(7)
+    update_ui_callback(1, 0)
 
     setup_report = [
         (missing_report, 'Posibles Incorporaciones'),
@@ -30,4 +30,4 @@ def make_report(data_frame_array, update_ui_callback, req_filename_reporte, req_
     report = export_file_to_excel(setup_report, dk_reports, req_filename_reporte, req_path_callback)
     cost_report = export_file_to_excel(setup_cost_report, dk_reports, req_filename_costos, req_path_callback)
     format_costs_excel(cost_report)
-    update_ui_callback(8)
+    update_ui_callback(1, 1)

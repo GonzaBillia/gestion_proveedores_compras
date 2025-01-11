@@ -13,7 +13,7 @@ class ExcelProcessorApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Excel Processor")
+        self.setWindowTitle("Normalizador de Listas")
         self.setGeometry(100, 100, 600, 300)
 
         # Instances of separated logic
@@ -37,7 +37,7 @@ class ExcelProcessorApp(QMainWindow):
         self.create_widgets()
 
     def create_widgets(self):
-        self.label = QLabel("Escoge una o más opciones", self)
+        self.label = QLabel("Escoge una o más opciones para comenzar", self)
         self.label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.label)
 
@@ -48,6 +48,7 @@ class ExcelProcessorApp(QMainWindow):
 
         self.upload_button = QPushButton("Subir archivos", self)
         self.upload_button.clicked.connect(self.upload_and_list_files)
+        self.upload_button.setFixedHeight(30)
         self.layout.addWidget(self.upload_button)
 
     def toggle_process_by_sheets(self, state):
