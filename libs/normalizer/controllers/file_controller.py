@@ -3,6 +3,9 @@ import json
 import pandas as pd
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QInputDialog
 from controllers.preferences_controller import PreferencesController
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
 
 class FileController:
     def __init__(self, data_processor):
@@ -57,7 +60,16 @@ class FileController:
 
             if output_file:
                 self.data_processor.save_combined_file(output_file)
+                
+                # Cargar el archivo con openpyxl para aplicar estilos
+                workbook = load_workbook(output_file)
+                for sheet_name in workbook.sheetnames:
+                    sheet = workbook[sheet_name]
+                    apply_styles_to_sheet(sheet)
+                workbook.save(output_file)
+
                 QMessageBox.information(None, "Éxito", f"Archivo combinado guardado en: {output_file}")
+                os.startfile(output_file)
             else:
                 QMessageBox.warning(None, "Advertencia", "No se seleccionó ninguna ubicación para guardar el archivo.")
         except Exception as e:
@@ -181,3 +193,32 @@ class FileController:
         if ok and filename:
             return filename
         return None
+
+# Función para aplicar estilos a cada hoja
+def apply_styles_to_sheet(sheet):
+    # Añadir estilos a las celdas
+    for row in sheet.iter_rows():
+        for cell in row:
+            # Añadir bordes
+            thin_border = Border(
+                left=Side(style="thin"),
+                right=Side(style="thin"),
+                top=Side(style="thin"),
+                bottom=Side(style="thin")
+            )
+            cell.border = thin_border
+            # Centrar el texto
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            # Aplicar estilo especial a la primera fila (cabecera)
+            if cell.row == 1:
+                cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Color amarillo
+                cell.font = Font(bold=True)  # Texto en negrita
+    
+    # Ajustar el ancho de las columnas
+    for col_idx in range(1, sheet.max_column + 1):
+        column_letter = get_column_letter(col_idx)
+        max_length = 0
+        for cell in sheet[column_letter]:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        sheet.column_dimensions[column_letter].width = max_length + 2  # Ajustar con un margen extra

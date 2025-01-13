@@ -8,6 +8,7 @@ from PyQt5.QtCore import Qt
 from libs.normalizer.controllers.file_controller import FileController
 from libs.normalizer.services.data_processor import DataProcessor
 from controllers.preferences_controller import PreferencesController
+from libs.normalizer.config.columns import columns
 
 class ExcelProcessorApp(QMainWindow):
     def __init__(self):
@@ -26,7 +27,7 @@ class ExcelProcessorApp(QMainWindow):
         self.directoy_key = PreferencesController().dk_normalized
 
         # Opciones predefinidas para renombrar las columnas
-        self.options = ["EAN", "DESCRIPCION", "PRECIO_COSTO", "IVA", "PRECIO_IVA", "DESCUENTO"]
+        self.options = columns
 
         # Main layout
         self.central_widget = QWidget()
