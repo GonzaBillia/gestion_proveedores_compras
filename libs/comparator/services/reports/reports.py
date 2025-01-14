@@ -4,6 +4,7 @@ from libs.comparator.services.reports.data_frames.barcode_report import format_c
 from libs.comparator.services.reports.data_frames.provider_report import format_provider_report
 from libs.comparator.controllers.file_controller import export_file_to_excel, format_costs_excel
 from controllers.preferences_controller import PreferencesController
+import os
 
 dk_reports = PreferencesController().dk_reports
 
@@ -30,4 +31,7 @@ def make_report(data_frame_array, update_ui_callback, req_filename_reporte, req_
     report = export_file_to_excel(setup_report, dk_reports, req_filename_reporte, req_path_callback)
     cost_report = export_file_to_excel(setup_cost_report, dk_reports, req_filename_costos, req_path_callback)
     format_costs_excel(cost_report)
+
+    os.startfile(report)
+    os.startfile(cost_report)
     update_ui_callback(1, 1)

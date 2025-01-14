@@ -29,6 +29,9 @@ class WorkerThread(QThread):
             req_filename_costos = partial(self.thread_req_filename, "Costos")
 
             reports.make_report(df_array, self.emit_update_ui_signal, req_filename_reporte, req_filename_costos, self.thread_req_save_file_path)
+            
+
+            
             self.emit_update_ui_signal(1, 2)
             self.all_tasks_completed.emit()  # Notificar que todas las tareas se completaron
         except Exception as e:
