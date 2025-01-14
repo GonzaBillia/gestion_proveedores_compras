@@ -8,17 +8,35 @@ PRODUCTS_MATCHED = """
         l.Nombre AS Laboratorio,
         p.IDLaboratorio,
         p.Costo,
+        CASE 
+            WHEN p.idTipoIVA = 2 THEN 10.5
+            WHEN p.idTipoIVA = 3 THEN 21
+            WHEN p.idTipoIVA = 4 THEN 27
+            ELSE 0
+        END AS iva,
+        p.Costo + (p.Costo * CASE 
+            WHEN p.idTipoIVA = 2 THEN 0.105
+            WHEN p.idTipoIVA = 3 THEN 0.21
+            WHEN p.idTipoIVA = 4 THEN 0.27
+            ELSE 0
+        END) AS precio_iva,
+        p.MargenPVP AS margen_pvp,
+        ROUND((p.Costo + (p.Costo * CASE 
+            WHEN p.idTipoIVA = 2 THEN 0.105
+            WHEN p.idTipoIVA = 3 THEN 0.21
+            WHEN p.idTipoIVA = 4 THEN 0.27
+            ELSE 0
+        END)) * (1 + p.MargenPVP / 100), 2) AS pvp,
         p.Activo
     FROM 
         productos AS p
     INNER JOIN 
-        laboratorios AS l
-        ON p.IDLaboratorio = l.IDLaboratorio
+        laboratorios AS l ON p.IDLaboratorio = l.IDLaboratorio
     INNER JOIN 
-        proveedores AS pr
-        ON p.IDProveedor = pr.IDProveedor
-    WHERE 
+        proveedores AS pr ON p.IDProveedor = pr.IDProveedor
+    WHERE  
         p.IDProducto IN %(id_producto_array)s;
+
 """
 
 PRODUCTS_BY_PROVIDER = """

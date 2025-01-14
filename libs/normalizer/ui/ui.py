@@ -1,4 +1,4 @@
-import sys
+import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
     QCheckBox, QMessageBox, QDialog, QScrollArea, QFrame, QLineEdit, QHBoxLayout,
@@ -70,8 +70,10 @@ class ExcelProcessorApp(QMainWindow):
     def show_sheet_selection(self):
         for file in self.file_manager.file_names:
             sheet_names = self.file_manager.get_sheet_names(file)
+            file_name =  os.path.basename(file)
             sheet_selection_dialog = QDialog(self)
-            sheet_selection_dialog.setWindowTitle(f"Selecciona hojas para {file}")
+            sheet_selection_dialog.setWindowTitle(f"Selecciona hojas para {file_name}")
+            sheet_selection_dialog.resize(350,150)
             layout = QVBoxLayout(sheet_selection_dialog)
 
             checkboxes = []
@@ -81,14 +83,19 @@ class ExcelProcessorApp(QMainWindow):
                 layout.addWidget(checkbox)
 
             # SpinBox para seleccionar la línea de encabezado
+            spin_box_layout = QHBoxLayout()  # Crea un layout horizontal
+
             spin_box_label = QLabel("Línea de encabezado:", sheet_selection_dialog)
-            layout.addWidget(spin_box_label)
+            spin_box_layout.addWidget(spin_box_label)
 
             spin_box = QSpinBox(sheet_selection_dialog)
             spin_box.setMinimum(1)
             spin_box.setMaximum(100)
             spin_box.setValue(self.header_line)  # Valor inicial desde self.header_line
-            layout.addWidget(spin_box)
+            spin_box_layout.addWidget(spin_box)
+
+            # Agrega el layout horizontal al layout principal
+            layout.addLayout(spin_box_layout)
 
             # Botón para procesar las hojas seleccionadas
             process_button = QPushButton("Procesar hojas seleccionadas", sheet_selection_dialog)

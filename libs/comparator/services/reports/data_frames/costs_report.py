@@ -12,7 +12,7 @@ def make_costs_report(df):
         output_path (str): Ruta donde se guardará el archivo Excel.
     """
     # Renombrar columnas
-    df = df.rename(
+    dfc = df.rename(
         columns={
             'idproducto': 'ID Producto',
             'descripcion': 'Descripcion',
@@ -21,4 +21,4 @@ def make_costs_report(df):
         }
     )
 
-    return df
+    return dfc
