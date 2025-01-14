@@ -1,4 +1,5 @@
 import os
+import re
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QFileDialog,
     QCheckBox, QMessageBox, QDialog, QScrollArea, QFrame, QLineEdit, QHBoxLayout,
@@ -263,14 +264,18 @@ class ExcelProcessorApp(QMainWindow):
                 renamed_columns = {}
                 return
 
-            # Aplicar los nuevos nombres al DataFrame pasado como argumento
-            dataframe.rename(columns=renamed_columns, inplace=True)
+            try:
+                # Aplicar los nuevos nombres al DataFrame pasado como argumento
+                dataframe.rename(columns=renamed_columns, inplace=True)
 
-            # Actualizar la lista de columnas seleccionadas con los nuevos nombres
-            self.selected_columns = [renamed_columns[original] for original in self.selected_columns]
+                # Actualizar la lista de columnas seleccionadas con los nuevos nombres
+                self.selected_columns = [renamed_columns[original] for original in self.selected_columns]
 
-            # Cerrar el diálogo
-            dialog.accept()
+                # Cerrar el diálogo
+                dialog.accept()
+            except KeyError as e:
+                QMessageBox.critical(dialog, "Error", f"Error al renombrar columnas: {e}")
+                renamed_columns = {}
 
         # Conectar el botón a la función de confirmación
         btn_confirm.clicked.connect(confirm)
@@ -291,17 +296,65 @@ class ExcelProcessorApp(QMainWindow):
             renamed_columns = self.rename_columns_dialog(self.data_processor.df_combined)
             if renamed_columns:
                 try:
+                    # Validar si las columnas renombradas existen en el DataFrame
+                    for col in renamed_columns.values():
+                        if col not in self.data_processor.df_combined.columns:
+                            raise KeyError(f"La columna '{col}' no existe en el DataFrame combinado.")
+
                     # Renombrar las columnas usando los nuevos nombres
-                    new_column_names = [renamed_columns[col] for col in self.data_processor.df_combined.columns]
-                    self.data_processor.rename_columns(new_column_names)
+                    self.data_processor.df_combined.rename(columns=renamed_columns, inplace=True)
+                    QMessageBox.information(self, "Éxito", "Columnas renombradas correctamente.")
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Error al renombrar columnas: {e}")
                     return
 
+            try:
+                # Verificar si existen las columnas 'ID_QUANTIO' o 'EAN'
+                columns_present = self.data_processor.df_combined.columns
+
+                if 'ID_QUANTIO' in columns_present or 'EAN' in columns_present:
+                    # Validar 'ID_QUANTIO' con expresión regular si existe
+                    if 'ID_QUANTIO' in columns_present:
+                        self.data_processor.df_combined['ID_QUANTIO'] = self.data_processor.df_combined['ID_QUANTIO'].apply(
+                            lambda x: x if isinstance(x, str) and re.fullmatch(r'\d+', str(x)) else None
+                        )
+
+                    # Validar 'EAN' con expresión regular si existe
+                    if 'EAN' in columns_present:
+                        self.data_processor.df_combined['EAN'] = self.data_processor.df_combined['EAN'].apply(
+                            lambda x: x if isinstance(x, str) and re.fullmatch(r'\d+', str(x)) else None
+                        )
+
+                    # Verificar si existen las columnas antes de eliminar filas
+                    subset_columns = [col for col in ['ID_QUANTIO', 'EAN', 'DESCRIPCION'] if col in columns_present]
+                    if subset_columns:
+                        # Usar la función .loc para evitar errores con valores None
+                        self.data_processor.df_combined.drop(
+                            self.data_processor.df_combined.loc[
+                                (self.data_processor.df_combined['ID_QUANTIO'].isna() if 'ID_QUANTIO' in columns_present else True) &
+                                (self.data_processor.df_combined['EAN'].isna() if 'EAN' in columns_present else True) |
+                                (self.data_processor.df_combined['DESCRIPCION'].isna() if 'DESCRIPCION' in columns_present else True)
+                            ].index,
+                            inplace=True
+                        )
+
+                    QMessageBox.information(self, "Éxito", "Archivo limpiado correctamente.")
+                else:
+                    QMessageBox.warning(self, "Advertencia", "No se encontraron columnas 'ID_QUANTIO' o 'EAN' para limpiar.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al limpiar el archivo: {e}")
+                return
+
             # Ordenar las columnas según self.options
             try:
+                # Obtener columnas ordenadas en base a self.options
                 ordered_columns = [col for col in self.options if col in self.data_processor.df_combined.columns]
                 remaining_columns = [col for col in self.data_processor.df_combined.columns if col not in self.options]
+
+                # Mover la columna 'ID_QUANTIO' al inicio si existe
+                if 'ID_QUANTIO' in self.data_processor.df_combined.columns:
+                    ordered_columns = ['ID_QUANTIO'] + [col for col in ordered_columns if col != 'ID_QUANTIO']
+
                 self.data_processor.df_combined = self.data_processor.df_combined[ordered_columns + remaining_columns]
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Error al ordenar columnas: {e}")
