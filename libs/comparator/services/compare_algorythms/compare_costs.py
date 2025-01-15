@@ -13,10 +13,10 @@ def make_cost_comparation(db_df, provider_df):
     """
     try:
         # Realizar el merge en la columna IDProducto
-        merged_df = pd.merge(db_df[["idproducto", "descripcion", "costo"]], provider_df[["idproducto", "precio_costo"]], on="idproducto", how="inner")
+        merged_df = pd.merge(db_df[["idproducto", "ean", "descripcion", "costo"]], provider_df[["idproducto", "precio_costo"]], on="idproducto", how="inner")
         
         # Seleccionar las columnas requeridas
-        result_df = merged_df[["idproducto", "descripcion", "costo", "precio_costo"]]
+        result_df = merged_df[["idproducto", "ean", "descripcion", "costo", "precio_costo"]]
 
         
         # Retornar el DataFrame resultante para uso posterior

@@ -4,6 +4,7 @@ from libs.comparator.services.compare_algorythms.compare_provider import compare
 from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_without_ask
 from controllers.preferences_controller import PreferencesController
 from libs.comparator.services.compare_algorythms.compare_costs import make_cost_comparation
+import pandas as pd
 
 pref_controller = PreferencesController()
 dk_reports = pref_controller.dk_reports
@@ -77,12 +78,25 @@ def make_provider_comparation(provider_match, provider_list, update_ui_callback,
 
     return result[1][0]
 
-def setup_report(matches_df, processed_matches_df, unmatched_cb, costs_df):
+def make_maintance_calculations(cost_df, matches_p):
+    # Merge de los dos DataFrames en base a la columna 'idproducto'
+    merged_df = pd.merge(cost_df, matches_p, on='idproducto')
+
+    # Calcular el precio con IVA
+    merged_df['precio_iva'] = merged_df['precio_costo'] * (1 + merged_df['iva'] / 100)
+
+    # Calcular el PVP considerando el margen sobre el precio con IVA
+    merged_df['pvp'] = merged_df['precio_iva'] * (1 + merged_df['margen_pvp'] / 100)
+
+    return merged_df[['idproducto', 'ean', 'descripcion', 'precio_costo', 'iva', 'margen_pvp', 'pvp']]
+
+def setup_report(matches_df, processed_matches_df, unmatched_cb, costs_df, maintance_df):
     report_array = [
         matches_df,
         processed_matches_df,
         unmatched_cb,
-        costs_df
+        costs_df,
+        maintance_df
     ]
 
     return report_array
