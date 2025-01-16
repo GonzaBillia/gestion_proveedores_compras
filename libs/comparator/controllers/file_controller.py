@@ -177,6 +177,36 @@ def export_file_to_excel(dataframes_with_names, directory_key, req_filename_call
 
     return full_path
 
+def export_file_to_csv(dataframes_with_names, directory_key, req_filename_callback, req_path_callback):    
+    # Definir el path usando ~ para el directorio de usuario
+    preferred_path, ask_where_to_save = get_preference_path(directory_key)
+
+    if ask_where_to_save or not preferred_path:
+        # Si la preferencia es preguntar o no hay una ruta de preferencia, abrir diálogo
+        full_path = req_path_callback()
+    else:
+        # Si hay una ruta de preferencia configurada, usarla
+        filename = req_filename_callback()
+        full_path = os.path.join(preferred_path, f"{filename}.csv")
+    """
+    Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
+
+    Args:
+        dataframes_with_names (list of tuples): Lista de tuplas donde cada una contiene un DataFrame y el nombre de la hoja.
+            Ejemplo: [(df1, 'Sheet1'), (df2, 'Sheet2')]
+        filename (str): Nombre del archivo CVSV a exportar. Ejemplo: 'results.csv'.
+    """
+    if dataframes_with_names is not None and not dataframes_with_names.empty:
+        # Exportar el DataFrame a CSV
+        dataframes_with_names.to_csv(full_path, index=False, encoding="utf-8-sig")
+        print(f"Archivo CSV exportado exitosamente: {full_path}")
+    else:
+        print(f"El DataFrame está vacío o no existe. No se generó ningún archivo.")
+
+    print(f"Archivo exportado exitosamente: {filename}")
+
+    return full_path
+
 def export_file_without_ask(dataframes_with_names, name, type):    
     # Definir el path usando ~ para el directorio de usuario
     filename = f"{name}_{type}.xlsx"
@@ -243,7 +273,7 @@ def apply_styles_to_sheet(sheet):
                 max_length = max(max_length, len(str(cell.value)))
         sheet.column_dimensions[column_letter].width = max_length + 2  # Ajustar con un margen extra
 
-def format_costs_excel(input_path, quantio_col="C", provider_col="D"):
+def format_costs_excel(input_path, quantio_col="D", provider_col="E"):
     """
     Carga un archivo Excel, aplica formato condicional para resaltar diferencias en precios entre dos columnas y guarda el archivo.
 

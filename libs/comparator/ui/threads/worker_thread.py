@@ -1,15 +1,16 @@
 from PyQt5.QtCore import QThread, pyqtSignal, QEventLoop
-from libs.comparator.controllers.process_controller import make_comparation, make_provider_comparation,setup_report, make_maintance_calculations
+from libs.comparator.controllers.process_controller import make_comparation, make_provider_comparation,setup_report, make_maintance_setup
 from libs.comparator.services.reports import reports
 from functools import partial
 
 class WorkerThread(QThread):
     task_completed = pyqtSignal(int, int)  # Señal para notificar que una tarea se completó
-    all_tasks_completed = pyqtSignal()  # Señal para notificar que todas las tareas se completaron
+    all_tasks_completed = pyqtSignal(bool)  # Señal para notificar que todas las tareas se completaron
     request_filename = pyqtSignal(str)
     filename_provided = pyqtSignal(str)
     request_save_file_path = pyqtSignal()
     file_path_provided = pyqtSignal(str)
+    error_signal = pyqtSignal(str)
     provider_df = None  # Datos del proveedor cargados
 
     def run(self):
@@ -21,7 +22,7 @@ class WorkerThread(QThread):
 
             quantio_matches_df = make_provider_comparation(matches_p, provider_list, self.emit_update_ui_signal, file_name)
 
-            maintance_df = make_maintance_calculations(cost_df, matches_p)
+            maintance_df = make_maintance_setup(cost_df, matches_p)
             self.emit_update_ui_signal(0, 7)
 
             df_array = setup_report(unmatched, quantio_matches_df, unmatched_cb, cost_df, maintance_df)
@@ -29,14 +30,19 @@ class WorkerThread(QThread):
             # Crea funciones parciales con el argumento predefinido
             req_filename_reporte = partial(self.thread_req_filename, "Reporte")
             req_filename_costos = partial(self.thread_req_filename, "Costos")
+            req_filename_maintance = partial(self.thread_req_filename, "Mantenimiento")
 
-            reports.make_report(df_array, self.emit_update_ui_signal, req_filename_reporte, req_filename_costos, self.thread_req_save_file_path)
+            reports.make_report(df_array, self.emit_update_ui_signal, req_filename_reporte, req_filename_costos, req_filename_maintance, self.thread_req_save_file_path)
             
 
             self.emit_update_ui_signal(1, 2)
-            self.all_tasks_completed.emit()  # Notificar que todas las tareas se completaron
+            self.all_tasks_completed.emit(False)  # Notificar que todas las tareas se completaron
         except Exception as e:
+            error_msg = f"Error en WorkerThread: {e}"
+            self.error_signal.emit(error_msg)
             print(f"Error en WorkerThread: {e}")
+            self.all_tasks_completed.emit(True)
+            self.quit()
         
         
 

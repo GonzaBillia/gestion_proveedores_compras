@@ -1,4 +1,4 @@
-import pandas as pd
+
 
 def format_maintance_report(df):
     columnas = ['idproducto', 'ean', 'precio_costo', 'pvp']

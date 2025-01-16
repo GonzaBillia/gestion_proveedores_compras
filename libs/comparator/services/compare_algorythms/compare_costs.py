@@ -18,6 +18,8 @@ def make_cost_comparation(db_df, provider_df):
         # Seleccionar las columnas requeridas
         result_df = merged_df[["idproducto", "ean", "descripcion", "costo", "precio_costo"]]
 
+        # Convertir la columna 'precio_costo' a float con 2 decimales
+        result_df['precio_costo'] = result_df['precio_costo'].astype(float).round(2)
         
         # Retornar el DataFrame resultante para uso posterior
         return result_df

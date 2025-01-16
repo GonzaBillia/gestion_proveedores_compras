@@ -153,6 +153,7 @@ class ListComparator(QMainWindow):
         # Configurar el hilo de trabajo
         self.worker_thread = WorkerThread()
         # Conectar señales
+        self.worker_thread.error_signal.connect(self.show_error_message)
         self.worker_thread.request_filename.connect(self.show_filename_dialog)
         self.worker_thread.filename_provided.connect(self.worker_thread.set_filename)
         self.worker_thread.request_save_file_path.connect(self.show_save_file_dialog)
@@ -191,9 +192,21 @@ class ListComparator(QMainWindow):
                 if self.current_task_index < len(self.task_widgets):
                     self.update_task_ui(self.current_task_index, 0)
 
-    def complete_all_tasks(self):
-        QMessageBox.information(self, "Completado", "Todas las tareas han finalizado.")
-        self.start_button.setDisabled(False)
+    def complete_all_tasks(self, error):
+        # Ocultar los labels de las subtareas y reiniciar la barra de progreso
+        for task_widget in self.task_widgets:
+            task_label, subtask_label, spinner, subtask_widget, subtasks = task_widget
+            subtask_widget.hide()  # Oculta el widget de subtarea
+            spinner.hide()  # Asegúrate de ocultar el spinner en caso de que esté visible
+    
+        # Reiniciar la barra de progreso
+        self.progress_bar.setValue(0)
+        
+        if error:
+            self.start_button.setDisabled(False)
+        else:
+            QMessageBox.information(self, "Completado", "Todas las tareas han finalizado.")
+            self.start_button.setDisabled(False)
 
     def pedir_ubicacion_archivo(self):
         # Abrir el diálogo para seleccionar el archivo
@@ -226,3 +239,11 @@ class ListComparator(QMainWindow):
             self.worker_thread.file_path_provided.emit(full_path)
         else:
             self.worker_thread.file_path_provided.emit("")
+
+    def show_error_message(self, message):
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setWindowTitle("Error")
+        msg_box.setText("Ocurrió un error durante la ejecución:")
+        msg_box.setInformativeText(message)
+        msg_box.exec_()
