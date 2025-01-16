@@ -1,6 +1,9 @@
 
 
 def format_maintance_report(df):
+    if 'pvp_sugerido' in df.columns:
+        df['pvp'] = df['pvp_sugerido']
+
     columnas = ['idproducto', 'ean', 'precio_costo', 'pvp']
 
     dfm = df[columnas].copy()

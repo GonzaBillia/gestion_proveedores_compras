@@ -2,6 +2,7 @@ from datetime import datetime
 from libs.comparator.services.reports.data_frames.missing_report import format_missing_report
 from libs.comparator.services.reports.data_frames.barcode_report import format_codebar_report
 from libs.comparator.services.reports.data_frames.provider_report import format_provider_report
+from libs.comparator.services.reports.data_frames.costs_report import make_costs_report
 from libs.comparator.services.reports.data_frames.maintance_report import format_maintance_report
 from libs.comparator.controllers.file_controller import export_file_to_excel, format_costs_excel, export_file_to_csv
 from controllers.preferences_controller import PreferencesController
@@ -19,6 +20,7 @@ def make_report(data_frame_array, update_ui_callback, req_filename_reporte, req_
     missing_report = format_missing_report(missing_df)
     codebar_report = format_codebar_report(codebar_df)
     provider_report = format_provider_report(provider_df)
+    costs_df = make_costs_report(costs_df)
     maintance_report = format_maintance_report(maintance_df)
     update_ui_callback(1, 0)
 
@@ -39,4 +41,5 @@ def make_report(data_frame_array, update_ui_callback, req_filename_reporte, req_
 
     os.startfile(report)
     os.startfile(cost_report)
+    os.startfile(maintance_report)
     update_ui_callback(1, 1)

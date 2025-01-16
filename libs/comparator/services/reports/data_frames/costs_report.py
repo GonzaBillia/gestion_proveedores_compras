@@ -22,4 +22,4 @@ def make_costs_report(df):
         }
     )
 
-    return dfc
+    return dfc[['ID Producto', 'EAN', 'Descripcion', 'Costo Quantio', 'Costo Proveedor']]

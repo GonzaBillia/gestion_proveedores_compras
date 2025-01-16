@@ -4,7 +4,7 @@ from libs.comparator.services.compare_algorythms.compare_provider import compare
 from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_without_ask
 from controllers.preferences_controller import PreferencesController
 from libs.comparator.services.compare_algorythms.compare_costs import make_cost_comparation
-from libs.comparator.services.calcs.maintance_calcs import calculate_pvp, merge_and_format
+from libs.comparator.services.calcs.maintance_calcs import calculate_pvp, merge_and_format, calcular_margen_pvp
 import pandas as pd
 
 pref_controller = PreferencesController()
@@ -81,7 +81,12 @@ def make_provider_comparation(provider_match, provider_list, update_ui_callback,
 
 def make_maintance_setup(cost_df, matches_p):
     df = merge_and_format(cost_df, matches_p)
-    dfr = calculate_pvp(df)
+    
+    if 'pvp_sugerido' in df.columns:
+        dfr = calcular_margen_pvp(df)
+    else:
+        dfr = calculate_pvp(df)
+    
     return dfr
 
 def setup_report(matches_df, processed_matches_df, unmatched_cb, costs_df, maintance_df):
