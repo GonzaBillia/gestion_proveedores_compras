@@ -1,5 +1,5 @@
 from libs.comparator.controllers.db_controller import fetch_products_by_barcode, fetch_products_matched
-from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, find_unmatches_barcodes, get_unique_providers
+from libs.comparator.services.compare_algorythms.compare_ean import compare_by_barcode, compare_by_id, find_unmatches_barcodes, get_unique_providers
 from libs.comparator.services.compare_algorythms.compare_provider import compare_by_provider
 from libs.comparator.controllers.file_controller import read_file, normalize_columns, export_file_without_ask
 from controllers.preferences_controller import PreferencesController
@@ -21,7 +21,7 @@ def make_comparation(provider_path, update_ui_callback):
     """
     provider_df, file_name = read_file(provider_path)
     provider_df = normalize_columns(provider_df)
-    provider_df = provider_df.drop_duplicates(subset='ean')
+    # provider_df = provider_df.drop_duplicates(subset='ean')
     # Tarea 1: Traer productos desde la base de datos
     db_df = fetch_products_by_barcode()
     update_ui_callback(0, 0)  # Actualizar la UI después de la tarea
@@ -32,13 +32,27 @@ def make_comparation(provider_path, update_ui_callback):
     update_ui_callback(0, 1)
 
     # Tarea 3: Comparar con la lista recibida
-    result = compare_by_barcode(provider_df, db_df)
-    matches = result[0][0]
-    unmatched = result[1][0]
 
-    # Obtener IDs para la segunda consulta
-    array_productos = matches["idproducto"].tolist()
-    update_ui_callback(0, 2)
+    # Asegurarnos de que las columnas 'ean' existan en ambos DataFrames
+    if 'ean' not in provider_df.columns and 'id_quantio' not in provider_df.columns:
+        raise ValueError("Lista de Proveedor sin columnas inprescindibles (ID_QUANTIO y/o EAN)")
+    
+    if 'ean' not in provider_df.columns:
+        result = compare_by_id(provider_df, db_df)
+        matches = result[0][0]
+        unmatched = result[1][0]
+
+        # Obtener IDs para la segunda consulta
+        array_productos = matches["idproducto"].tolist()
+        update_ui_callback(0, 2)
+    else:
+        result = compare_by_barcode(provider_df, db_df)
+
+        matches = result[0][0]
+        unmatched = result[1][0]
+        # Obtener IDs para la segunda consulta
+        array_productos = matches["idproducto"].tolist()
+        update_ui_callback(0, 2)
 
     # Tarea 4: Ordenar lista de productos
     matches_p = fetch_products_matched(array_productos)

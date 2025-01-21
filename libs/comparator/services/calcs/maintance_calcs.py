@@ -128,6 +128,9 @@ def calcular_margen_pvp(df):
     # Calcular el precio con IVA
     df['precio_iva'] = df['precio_costo'] * (1 + df['iva'] / 100)
 
+    # Calcular el PVP considerando el margen sobre el precio con IVA, usando aplicar_formula
+    df['pvp_sugerido'] = df.apply(lambda row: aplicar_formula(row['precio_iva'], row['margen_pvp']), axis=1)
+
     # Retornar las columnas solicitadas
     return df[['idproducto', 'ean', 'descripcion', 'precio_costo', 'iva', 'margen_pvp', 'precio_iva', 'pvp_sugerido']]
 
