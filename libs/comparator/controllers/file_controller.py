@@ -179,10 +179,10 @@ def export_file_to_excel(dataframes_with_names, directory_key, req_filename_call
 
 def export_file_without_ask(dataframes_with_names, name, type):    
     comparated_path = PreferencesController().dk_comparated
-    preferred_path = get_preference_path(comparated_path)
+    preferred_path, _ = get_preference_path(comparated_path)
     # Definir el path usando ~ para el directorio de usuario
     filename = f"{name}_{type}.xlsx"
-    full_path = f"{preferred_path}/{filename}"
+    full_path = os.path.join(preferred_path, filename)
     """
     Exporta múltiples DataFrames a un archivo Excel con hojas separadas.
 
