@@ -11,3 +11,10 @@ columns = [
    "PVP_SUGERIDO",
    "ID_QUANTIO"
 ]
+
+ITG_REQUIRED_COLUMNS = [
+   "id proveedor",
+   "codigo interno de proveedor",
+   "cod bar",
+   "costo sin iva"
+]

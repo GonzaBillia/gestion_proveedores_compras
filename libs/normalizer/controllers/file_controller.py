@@ -70,6 +70,7 @@ class FileController:
 
                 QMessageBox.information(None, "Éxito", f"Archivo combinado guardado en: {output_file}")
                 os.startfile(output_file)
+                return preferred_path, filename
             else:
                 QMessageBox.warning(None, "Advertencia", "No se seleccionó ninguna ubicación para guardar el archivo.")
         except Exception as e:
