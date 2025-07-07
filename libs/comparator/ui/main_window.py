@@ -157,12 +157,12 @@ class ListComparator(QMainWindow):
         self.worker_thread.filename_provided.connect(self.worker_thread.set_filename)
         self.worker_thread.request_save_file_path.connect(self.show_save_file_dialog)
         self.worker_thread.file_path_provided.connect(self.worker_thread.set_file_path)
-        self.worker_thread.provider_df = provider_df_path
         self.worker_thread.task_completed.connect(partial(self.update_task_ui))
         self.worker_thread.all_tasks_completed.connect(self.complete_all_tasks)
-        self.worker_thread.start()
+        self.worker_thread.error_occurred.connect(self.show_error_message)  # <<--- AQUÍ
+        self.worker_thread.provider_df = provider_df_path
 
-        # Iniciar la primera tarea
+        self.worker_thread.start()
         self.update_task_ui(0, 0)
 
     def update_task_ui(self, task_index, subtask_index):
@@ -195,6 +195,10 @@ class ListComparator(QMainWindow):
         QMessageBox.information(self, "Completado", "Todas las tareas han finalizado.")
         self.start_button.setDisabled(False)
 
+    def show_error_message(self, error_msg):
+        QMessageBox.critical(self, "Error", error_msg)
+        self.start_button.setDisabled(False)
+        
     def pedir_ubicacion_archivo(self):
         # Abrir el diálogo para seleccionar el archivo
         options = QFileDialog.Options()

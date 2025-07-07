@@ -157,7 +157,7 @@ class ExcelProcessorApp(QMainWindow):
         self.checkboxes = []
 
         # Crear checkboxes para cada columna
-        for col in self.data_processor.df.columns:
+        for col in self.data_processor.df.columns.astype(str):
             checkbox = QCheckBox(col, scroll_content)
             self.checkboxes.append(checkbox)
             scroll_layout.addWidget(checkbox)
@@ -293,6 +293,8 @@ class ExcelProcessorApp(QMainWindow):
         if self.data_processor.df_combined.empty:
             QMessageBox.critical(self, "Error", "No hay datos para combinar.")
             return
+        
+
 
         # 2) Renombrado opcional
         if not hasattr(self, 'selected_columns') or not self.selected_columns:
@@ -312,6 +314,7 @@ class ExcelProcessorApp(QMainWindow):
                 QMessageBox.critical(self, "Error", f"Error al renombrar columnas: {e}")
                 return
 
+            
         # 3) Limpieza de filas sin ID_QUANTIO, EAN o DESCRIPCION válidos
         try:
             cols = self.data_processor.df_combined.columns
@@ -359,6 +362,17 @@ class ExcelProcessorApp(QMainWindow):
             QMessageBox.critical(self, "Error", f"Error al ordenar columnas: {e}")
             return
 
+            # --- ELIMINAR FILAS SIN EAN VÁLIDO ---
+        if 'EAN' in self.data_processor.df_combined.columns:
+            antes = len(self.data_processor.df_combined)
+            self.data_processor.df_combined = self.data_processor.df_combined[
+                self.data_processor.df_combined['EAN'].notna() & 
+                (self.data_processor.df_combined['EAN'].astype(str).str.strip() != "")
+            ]
+            despues = len(self.data_processor.df_combined)
+            if antes != despues:
+                QMessageBox.information(self, "Limpieza EAN", f"Se eliminaron {antes-despues} filas sin EAN.")
+                
         # 5) Guardar el Excel combinado “normal”
         try:
             # Asumimos que save_combined_file devuelve la ruta completa del archivo guardado

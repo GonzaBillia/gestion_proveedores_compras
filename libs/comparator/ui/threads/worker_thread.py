@@ -11,6 +11,7 @@ class WorkerThread(QThread):
     request_save_file_path = pyqtSignal()
     file_path_provided = pyqtSignal(str)
     provider_df = None  # Datos del proveedor cargados
+    error_occurred = pyqtSignal(str) 
 
     def run(self):
         """
@@ -32,7 +33,9 @@ class WorkerThread(QThread):
             self.emit_update_ui_signal(1, 2)
             self.all_tasks_completed.emit()  # Notificar que todas las tareas se completaron
         except Exception as e:
-            print(f"Error en WorkerThread: {e}")
+            error_msg = f"Error en WorkerThread: {e}"
+            print(error_msg)  # sigue mostrando en consola si quieres
+            self.error_occurred.emit(error_msg) 
         
         
 
