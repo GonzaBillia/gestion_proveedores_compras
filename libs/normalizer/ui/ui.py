@@ -10,7 +10,8 @@ from PyQt5.QtCore import Qt
 from libs.normalizer.controllers.file_controller import FileController
 from libs.normalizer.services.data_processor import DataProcessor
 from controllers.preferences_controller import PreferencesController
-from libs.normalizer.config.columns import columns, ITG_REQUIRED_COLUMNS
+from libs.normalizer.config.columns import columns
+from libs.normalizer.controllers.itg_process_controller import execute
 
 class ExcelProcessorApp(QMainWindow):
     def __init__(self):
@@ -368,22 +369,7 @@ class ExcelProcessorApp(QMainWindow):
 
         # 6) Crear y guardar el Excel en formato ITG
         try:
-            df = self.data_processor.df_combined
-            itg_df = pd.DataFrame({
-                "id proveedor": [""] * len(df),
-                "codigo interno de proveedor": [""] * len(df),
-                "cod bar": df["EAN"],
-                "costo sin iva": df["PRECIO_COSTO"],
-            }, columns=ITG_REQUIRED_COLUMNS)
-
-            # Determinar carpeta de salida
-            if combined_path:
-                output_dir = os.path.dirname(combined_path)
-            else:
-                output_dir = os.getcwd()
-            itg_path = os.path.join(output_dir, f"{filename}_ITG.xlsx")
-
-            itg_df.to_excel(itg_path, index=False)
+            itg_path = execute(self.data_processor.df_combined, combined_path, filename)
             QMessageBox.information(self, "Éxito", f"Archivo ITG creado:\n{itg_path}")
             os.startfile(itg_path)
         except Exception as e:
