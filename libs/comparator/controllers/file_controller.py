@@ -245,7 +245,7 @@ def apply_styles_to_sheet(sheet):
                 max_length = max(max_length, len(str(cell.value)))
         sheet.column_dimensions[column_letter].width = max_length + 2  # Ajustar con un margen extra
 
-def format_costs_excel(input_path, quantio_col="C", provider_col="D"):
+def format_costs_excel(input_path, quantio_col="D", provider_col="E"):
     """
     Carga un archivo Excel, aplica formato condicional para resaltar diferencias en precios entre dos columnas y guarda el archivo.
 

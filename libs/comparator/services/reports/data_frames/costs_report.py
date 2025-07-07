@@ -18,7 +18,9 @@ def make_costs_report(df):
             'ean': 'EAN',
             'descripcion': 'Descripcion',
             'costo': 'Costo Quantio',
-            'precio_costo': 'Costo Proveedor'
+            'precio_costo': 'Costo Proveedor',
+            'iva': 'IVA',
+            'margen_pvp': 'Margen PVP'
         }
     )
 
