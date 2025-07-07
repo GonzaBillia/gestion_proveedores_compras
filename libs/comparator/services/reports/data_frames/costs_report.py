@@ -15,6 +15,7 @@ def make_costs_report(df):
     dfc = df.rename(
         columns={
             'idproducto': 'ID Producto',
+            'ean': 'EAN',
             'descripcion': 'Descripcion',
             'costo': 'Costo Quantio',
             'precio_costo': 'Costo Proveedor'
