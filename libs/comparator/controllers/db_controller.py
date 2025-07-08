@@ -12,7 +12,10 @@ def fetch_products_matched(array_productos):
     Consulta a la base de datos para obtener los datos de productos.
     Devuelve un DataFrame con la información de la tabla.
     """
-    connection = create_connection()
+    conn = create_connection()
+    if conn is None:
+        raise Exception("❌ No se pudo conectar a la base de datos. Verifique los parámetros de conexión.")
+    cursor = conn.cursor()
     try:
         logging.info("Estableciendo conexión a la base de datos.")
 
@@ -66,7 +69,7 @@ def fetch_products_matched(array_productos):
                 p.IDProducto IN ({placeholders})
         """
 
-        with connection.cursor() as cursor:
+        with cursor:
             cursor.execute(query, productos_limpios)
             result = cursor.fetchall()
 
@@ -88,16 +91,19 @@ def fetch_products_matched(array_productos):
         raise
 
     finally:
-        close_connection(connection)
+        close_connection(conn)
 
 
 def fetch_products_by_barcode():
-    connection = create_connection()
+    conn = create_connection()
+    if conn is None:
+        raise Exception("❌ No se pudo conectar a la base de datos. Verifique los parámetros de conexión.")
+    cursor = conn.cursor()
 
     try:
         logging.info("Estableciendo conexión a la base de datos.")
         # Ejecutar la consulta
-        with connection.cursor() as cursor:
+        with cursor:
             logging.info("Ejecutando consulta: ALL_CODEBARS")
             cursor.execute(ALL_CODEBARS)
             result = cursor.fetchall()
@@ -120,15 +126,18 @@ def fetch_products_by_barcode():
 
     finally:
         # Asegurarse de cerrar la conexión
-        close_connection(connection)
+        close_connection(conn)
 
 def fetch_all_providers():
-    connection = create_connection()
+    conn = create_connection()
+    if conn is None:
+        raise Exception("❌ No se pudo conectar a la base de datos. Verifique los parámetros de conexión.")
+    cursor = conn.cursor()
 
     try:
         logging.info("Estableciendo conexión a la base de datos.")
         # Ejecutar la consulta
-        with connection.cursor() as cursor:
+        with cursor:
             logging.info("Ejecutando consulta: ALL_PROVIDERS")
             cursor.execute(ALL_PROVIDERS)
             result = cursor.fetchall()
@@ -151,13 +160,16 @@ def fetch_all_providers():
 
     finally:
         # Asegurarse de cerrar la conexión
-        close_connection(connection)
+        close_connection(conn)
 
 def fetch_products_by_provider(id_provider):
-    connection = create_connection()
+    conn = create_connection()
+    if conn is None:
+        raise Exception("❌ No se pudo conectar a la base de datos. Verifique los parámetros de conexión.")
+    cursor = conn.cursor()
     try:
         logging.info("Estableciendo conexión a la base de datos.")
-        with connection.cursor() as cursor:
+        with cursor:
             logging.info("Ejecutando consulta: PRODUCTS_BY_PROVIDER")
             base_query = """
                 SELECT 
@@ -207,4 +219,4 @@ def fetch_products_by_provider(id_provider):
         raise
 
     finally:
-        close_connection(connection)
+        close_connection(conn)

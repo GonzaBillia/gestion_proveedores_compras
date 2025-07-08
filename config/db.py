@@ -7,7 +7,7 @@ def create_connection():
     """
     try:
         # Convertir el puerto a int, si es que lo tenemos en string
-        port = int(DB_PORT) if DB_PORT else 3306
+        port = int(DB_PORT) if DB_PORT else 6613
 
         connection = pymysql.connect(
             host=DB_HOST,

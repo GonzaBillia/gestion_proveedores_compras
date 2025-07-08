@@ -4,9 +4,13 @@ import pandas as pd
 
 
 def fetch_products_by_ean(ean_list):
-    connection = create_connection()
+    conn = create_connection()
+    if conn is None:
+        raise Exception("❌ No se pudo conectar a la base de datos. Verifique los parámetros de conexión.")
+    cursor = conn.cursor()
+
     try:
-        with connection.cursor() as cursor:
+        with cursor:
             if not ean_list:
                 return pd.DataFrame(columns=["EAN", "IDProducto", "Troquel", "Producto", "idProveedor", 'EsCodigoPrincipal'])
             placeholders = ','.join(['%s'] * len(ean_list))
@@ -61,4 +65,4 @@ def fetch_products_by_ean(ean_list):
         raise
 
     finally:
-        close_connection(connection)
+        close_connection(conn)

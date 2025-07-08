@@ -1,8 +1,16 @@
-import os
 from dotenv import load_dotenv
+import os
 
-# Carga las variables de entorno del archivo .env
-load_dotenv()
+import sys
+
+def resource_path(relative_path):
+    """Para que funcione tanto en el ejecutable como en dev."""
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+dotenv_path = resource_path('.env')
+load_dotenv(dotenv_path=dotenv_path)
 
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
