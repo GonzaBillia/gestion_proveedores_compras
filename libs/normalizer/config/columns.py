@@ -16,5 +16,6 @@ ITG_REQUIRED_COLUMNS = [
    "id proveedor",
    "codigo interno de proveedor",
    "cod bar",
+   "descripcion",
    "costo sin iva"
 ]

@@ -9,29 +9,25 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 def prepare(df):
     
     prods = fetch_products_by_ean(df["EAN"].tolist())
+    print(prods)
     df = pd.merge(df, prods, how="left", on="EAN")
     
     return df
 
 
-def execute(df, combined_path, filename):
+def execute(df, combined_path, filename, prov_id):
     # Asegura que EAN es str
     df["EAN"] = df["EAN"].astype(str)
 
-    # Traer productos por EAN
-    prods = fetch_products_by_ean(df["EAN"].tolist())
-    prods = prods.rename(columns={"Codebar": "EAN"})
-    prods["EAN"] = prods["EAN"].astype(str)
-
     # Unir info de productos
-    df = pd.merge(df, prods, how="left", on="EAN")
-    df = df[df["idProveedor"].notnull() & (df["idProveedor"] != "")]
+    df["idProveedor"] = prov_id
     
     # Crear DataFrame final con columnas requeridas
     itg_df = pd.DataFrame({
         "id proveedor": df.get("idProveedor", ""),  # O ajusta si no viene de prods
         "codigo interno de proveedor": df.get("Troquel", ""),          # Si tienes este dato, ponlo aquí
         "cod bar": df["EAN"],
+        "descripcion": df["DESCRIPCION"],
         "costo sin iva": df["PRECIO_COSTO"],
     }, columns=ITG_REQUIRED_COLUMNS)
 

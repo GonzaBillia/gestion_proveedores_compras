@@ -12,6 +12,8 @@ from libs.normalizer.services.data_processor import DataProcessor
 from controllers.preferences_controller import PreferencesController
 from libs.normalizer.config.columns import columns
 from libs.normalizer.controllers.itg_process_controller import execute
+from libs.normalizer.controllers.db_controller import fetch_providers
+from libs.normalizer.ui.search_dialog import SearchSelectDialog
 
 class ExcelProcessorApp(QMainWindow):
     def __init__(self):
@@ -383,12 +385,19 @@ class ExcelProcessorApp(QMainWindow):
 
         # 6) Crear y guardar el Excel en formato ITG
         try:
-            itg_path = execute(self.data_processor.df_combined, combined_path, filename)
-            QMessageBox.information(self, "Éxito", f"Archivo ITG creado:\n{itg_path}")
-            os.startfile(itg_path)
+            dialog = SearchSelectDialog(fetch_providers)
+            if dialog.exec_() and dialog.selected_id is not None:
+                seleccion_id = dialog.selected_id
+                print("Seleccionaste el ID:", seleccion_id)
+                itg_path = execute(self.data_processor.df_combined, combined_path, filename, seleccion_id)
+                QMessageBox.information(self, "Éxito", f"Archivo ITG creado:\n{itg_path}")
+                os.startfile(itg_path)
+            else:
+                print("Cancelado o sin selección")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al crear archivo ITG: {e}")
             return
+
 
 
     def upload_reference_file(self):
